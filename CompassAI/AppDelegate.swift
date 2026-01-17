@@ -13,12 +13,14 @@
 //
 
 import UIKit
-
+import GoogleMobileAds
 
 // MARK: - App Delegate
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Initialize the Google Mobile Ads SDK.
+        MobileAds.shared.start()
         return true
     }
     

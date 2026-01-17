@@ -7,6 +7,7 @@
 import UIKit
 import Foundation
 import CoreData
+import GoogleMobileAds
 
 // MARK: - Results View Controller
 class OverviewViewController: BaseViewController {
@@ -15,9 +16,11 @@ class OverviewViewController: BaseViewController {
     private let contentView = UIView()
     private var headerView: CompassAIHeaderView!
     private let cardView = UIView()
+
     private var footerStackView = UIStackView()
     private let bottomPaddingView = UIView()
     private var saveButton: UIButton!
+    private var bannerView: BannerView!
     
     private var analysis: OrganizationAnalysis?
     private var organizationName: String = ""
@@ -28,6 +31,8 @@ class OverviewViewController: BaseViewController {
         super.viewDidLoad()
         setupUI()
         setupConstraints()
+        
+        setupBannerAdContent()
         self.navigationController?.interactivePopGestureRecognizer?.delegate = self
     }
     
@@ -74,6 +79,7 @@ class OverviewViewController: BaseViewController {
         setupCard()
         setupSaveButton()
 //        setupFooter()
+        setupBannerAdUI()
         setupFooterOld()
     }
     
@@ -98,6 +104,20 @@ class OverviewViewController: BaseViewController {
         updateSaveButtonAppearance()
         
         view.addSubview(saveButton)
+    }
+    
+    private func setupBannerAdUI() {
+        // Initialize the banner view.
+        bannerView = BannerView()
+
+        bannerView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(bannerView)
+    }
+    
+    private func setupBannerAdContent() {
+        // Request an anchored adaptive banner with a width of 375.
+        bannerView.adSize = currentOrientationAnchoredAdaptiveBanner(width: 375)
+        bannerView.load(Request())
     }
     
     private func updateSaveButtonAppearance() {
@@ -182,8 +202,23 @@ class OverviewViewController: BaseViewController {
             saveButton.widthAnchor.constraint(equalToConstant: 40),
             saveButton.heightAnchor.constraint(equalToConstant: 40),
             
+            
+            // This example doesn't give width or height constraints, as the ad size gives the banner an
+            // intrinsic content size to size the view.
+//            NSLayoutConstraint.activate([
+          // Align the banner's bottom edge with the safe area's bottom edge
+            bannerView.topAnchor.constraint(greaterThanOrEqualTo: cardView.bottomAnchor, constant: 10),
+//              bannerView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+//            bannerView.bottomAnchor.constraint(equalTo: footerStackView.bottomAnchor),
+          // Center the banner horizontally in the view
+            bannerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+//            ])
+            
             // Footer
-            footerStackView.topAnchor.constraint(greaterThanOrEqualTo: cardView.bottomAnchor, constant: 25),
+            // With banner
+            footerStackView.topAnchor.constraint(greaterThanOrEqualTo: bannerView.bottomAnchor, constant: 10),
+            // Without banner
+//            footerStackView.topAnchor.constraint(greaterThanOrEqualTo: cardView.bottomAnchor, constant: 25),
             footerStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 0),
             footerStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: 0),
             footerStackView.heightAnchor.constraint(equalToConstant: footerViewHeight),
@@ -340,34 +375,6 @@ class OverviewViewController: BaseViewController {
                 financialData: financialResponse
             )
             return
-            
-//            // Fetch the persisted financial contributions from Core Data
-//            let persistence = CoreDataPersistence()
-//            let context = persistence.container.viewContext
-//            
-//            let request: NSFetchRequest<QueryAnswerObject> = QueryAnswerObject.fetchRequest()
-//            request.predicate = NSPredicate(format: "topic == %@", organizationName)
-//            request.relationshipKeyPathsForPrefetching = ["relationship"]
-//            request.fetchLimit = 1
-//            
-//            do {
-//                if let qa = try context.fetch(request).first,
-//                   let financialContributions = qa.finanicial_contributions_overview {
-//                    
-//                    // Convert Core Data object to FinancialContributionsResponse
-//                    let financialResponse = convertToFinancialContributionsResponse(financialContributions)
-//                    
-//                    // Show the financial contributions screen with persisted data
-//                    coordinator?.showFinancialContributionsScreenWithPersistedData(
-//                        organizationName: organizationName,
-//                        viewModel: financialViewModel,
-//                        financialData: financialResponse
-//                    )
-//                    return
-//                }
-//            } catch {
-//                print("Error fetching persisted financial contributions: \(error)")
-//            }
         }
         
         // Fallback: Show the screen and fetch from network
@@ -489,48 +496,6 @@ class OverviewViewController: BaseViewController {
             updateSaveButtonAppearance()
         }
     }
-    
-//    private func addPersistedQueryAnswer(context: NSManagedObjectContext, analysis: OrganizationAnalysis) {
-//        context.perform { [weak self] in
-//            guard let self = self else { return }
-//            
-//            let qa = QueryAnswerObject(context: context)
-//            qa.date_persisted = Date()
-//            qa.topic = self.organizationName
-//            qa.lean = analysis.lean
-//            qa.rating = Int16(analysis.rating)
-//            qa.context = analysis.description
-//            qa.created_with_financial_contributions_info = analysis.hasFinancialContributions
-//            
-//            do {
-//                try context.save()
-//                DispatchQueue.main.async {
-//                    self.isSaved = true
-//                    self.updateSaveButtonAppearance()
-////                    print("Analysis saved successfully")
-//                }
-//            } catch {
-//                print("Query answer save error:", error)
-//            }
-//        }
-//    }
-//    
-//    private func removePersistedQueryAnswer(context: NSManagedObjectContext, organizationName: String) {
-//        let request: NSFetchRequest<QueryAnswerObject> = QueryAnswerObject.fetchRequest()
-//        request.predicate = NSPredicate(format: "topic == %@", organizationName)
-//        
-//        do {
-//            let results = try context.fetch(request)
-//            for result in results {
-//                context.delete(result)
-//            }
-//            try context.save()
-//            isSaved = false
-////            print("Analysis removed from saved items")
-//        } catch {
-//            print("Error removing saved analysis: \(error)")
-//        }
-//    }
     
     // Add this method to your OverviewViewController class
     func configureWithPersistedData(analysis: OrganizationAnalysis, organizationName: String, coordinator: AppCoordinator) {
