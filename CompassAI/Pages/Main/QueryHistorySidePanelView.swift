@@ -11,8 +11,19 @@ import CoreData
 
 // MARK: - Side Panel Delegate Protocol
 protocol QueryHistorySidePanelViewDelegate: AnyObject {
-    func sidePanelDidSelectItem(_ item: QueryAnswerObject)
-    func sidePanelDidDeleteItem(_ item: QueryAnswerObject, at indexPath: IndexPath)
+    func sidePanelDidSelectItem(_ objectID: NSManagedObjectID)
+    func sidePanelDidDeleteItem(_ objectID: NSManagedObjectID, at indexPath: IndexPath)
+}
+
+class QueryAnswerCellViewModel {
+    var topicName: String?
+    var category: String?
+    var objectID: NSManagedObjectID?
+    func initFromCoreData(coreDataObject: QueryAnswerObject) {
+        self.topicName = coreDataObject.topic
+        self.category = coreDataObject.category
+        self.objectID = coreDataObject.objectID
+    }
 }
 
 // MARK: - Side Panel View
@@ -31,7 +42,9 @@ class QueryHistorySidePanelView: UIView {
     private(set) var isVisible = false
     private let panelWidth: CGFloat = 280
     
-    private var persistedQueryAnswers: [QueryAnswerObject] = []
+//    private var persistedQueryAnswers: [QueryAnswerObject] = []
+    private var persistedQueryAnswers: [QueryAnswerCellViewModel] = []
+    
     
     // MARK: - Initialization
     override init(frame: CGRect) {
@@ -143,6 +156,17 @@ class QueryHistorySidePanelView: UIView {
         overlayView.addGestureRecognizer(swipeLeft)
     }
     
+    private func queryAnswerArrayFromCoreData(coreDataQueryAnswers: [QueryAnswerObject]) -> [QueryAnswerCellViewModel] {
+        let n = coreDataQueryAnswers.count
+        var answers = [QueryAnswerCellViewModel]()
+        for cd in coreDataQueryAnswers {
+            let mem = QueryAnswerCellViewModel()
+            mem.initFromCoreData(coreDataObject: cd)
+            answers.append(mem)
+        }
+        return answers
+    }
+    
     // MARK: - Actions
     @objc private func closeButtonTapped() {
         hide()
@@ -188,8 +212,9 @@ class QueryHistorySidePanelView: UIView {
         }
     }
     
-    func updateData(_ queryAnswers: [QueryAnswerObject]) {
-        self.persistedQueryAnswers = queryAnswers
+    func updateData(_ coreDataQueryAnswers: [QueryAnswerObject]) {
+//        self.persistedQueryAnswers = coreDataQueryAnswers
+        self.persistedQueryAnswers = queryAnswerArrayFromCoreData(coreDataQueryAnswers: coreDataQueryAnswers)
         tableView.reloadData()
     }
     
@@ -202,6 +227,7 @@ class QueryHistorySidePanelView: UIView {
         persistedQueryAnswers.remove(at: index)
         tableView.deleteRows(at: [IndexPath(row: index, section: 0)], with: .fade)
     }
+    
     
     // MARK: - Touch Handling
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
@@ -247,7 +273,7 @@ extension QueryHistorySidePanelView: UITableViewDataSource, UITableViewDelegate 
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             let item = persistedQueryAnswers[indexPath.row]
-            delegate?.sidePanelDidDeleteItem(item, at: indexPath)
+            delegate?.sidePanelDidDeleteItem(item.objectID!, at: indexPath)
         }
     }
     
@@ -258,7 +284,7 @@ extension QueryHistorySidePanelView: UITableViewDataSource, UITableViewDelegate 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let item = persistedQueryAnswers[indexPath.row]
-        delegate?.sidePanelDidSelectItem(item)
+        delegate?.sidePanelDidSelectItem(item.objectID!)
     }
 }
 
@@ -291,22 +317,10 @@ private class QueryHistoryCellInternal: UITableViewCell {
         categoryLabel.textColor = .black
         categoryLabel.numberOfLines = 1
         categoryLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-//        // Date label
-//        dateLabel.font = UIFont.systemFont(ofSize: 12)
-//        dateLabel.textColor = .systemGray
-//        dateLabel.translatesAutoresizingMaskIntoConstraints = false
-//        
-//        // Rating label
-//        ratingLabel.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
-//        ratingLabel.textColor = .systemBlue
-//        ratingLabel.translatesAutoresizingMaskIntoConstraints = false
-        
+     
         contentView.addSubview(topicLabel)
         contentView.addSubview(categoryLabel)
-//        contentView.addSubview(dateLabel)
-//        contentView.addSubview(ratingLabel)
-        
+
         // TODO: Make this correct.
         NSLayoutConstraint.activate([
             topicLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 15),
@@ -318,18 +332,25 @@ private class QueryHistoryCellInternal: UITableViewCell {
             categoryLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 25),
             categoryLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: 0),
             
-            
-//            dateLabel.topAnchor.constraint(equalTo: topicLabel.bottomAnchor, constant: 4),
-//            dateLabel.leadingAnchor.constraint(equalTo: topicLabel.leadingAnchor),
-//            dateLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -8),
-//            
-//            ratingLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-//            ratingLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-//            ratingLabel.widthAnchor.constraint(equalToConstant: 60)
         ])
     }
     
-    func configure(with queryAnswer: QueryAnswerObject) {
+    func configure(with queryAnswerCellViewModel: QueryAnswerCellViewModel) {
+        if let topicName = queryAnswerCellViewModel.topicName {
+            topicLabel.text = topicName
+        } else {
+            topicLabel.text = "Unknown Topic"
+        }
+        if let categoryName = queryAnswerCellViewModel.category {
+            categoryLabel.text = categoryName
+        }
+        else {
+            categoryLabel.text = ""
+//            categoryLabel.text = "Unknown Category"
+        }
+    }
+    
+    func configure(withCoreData queryAnswer: QueryAnswerObject) {
         if let topicName = queryAnswer.topic {
             topicLabel.text = topicName
         } else {

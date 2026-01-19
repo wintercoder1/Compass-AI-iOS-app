@@ -344,12 +344,12 @@ extension SearchViewController: CompanySuggestionDropdownDelegate {
 // MARK: - SidePanelViewDelegate
 extension SearchViewController: QueryHistorySidePanelViewDelegate {
     
-    func sidePanelDidSelectItem(_ item: QueryAnswerObject) {
+    func sidePanelDidSelectItem(_ objectID: NSManagedObjectID) {
         let persistence = CoreDataPersistence()
         let context = persistence.container.viewContext
         
         do {
-            let freshObject = try context.existingObject(with: item.objectID) as! QueryAnswerObject
+            let freshObject = try context.existingObject(with: objectID) as! QueryAnswerObject
             
             if let topic = freshObject.topic {
                 let analysis = createOrganizationAnalysis(from: freshObject)
@@ -362,17 +362,17 @@ extension SearchViewController: QueryHistorySidePanelViewDelegate {
         }
     }
     
-    func sidePanelDidDeleteItem(_ item: QueryAnswerObject, at indexPath: IndexPath) {
+    func sidePanelDidDeleteItem(_ objectID: NSManagedObjectID, at indexPath: IndexPath) {
         let persistence = CoreDataPersistence()
         let context = persistence.container.viewContext
         
         do {
-            let freshObject = try context.existingObject(with: item.objectID) as! QueryAnswerObject
+            let freshObject = try context.existingObject(with: objectID) as! QueryAnswerObject
             
             if let topicToDelete = freshObject.topic {
                 CoreDataHelper.removePersistedQueryAnswer(context: context, organizationName: topicToDelete) { _ in
                     DispatchQueue.main.async {
-                        if let index = self.persistedQueryAnswers.firstIndex(where: { $0.objectID == item.objectID }) {
+                        if let index = self.persistedQueryAnswers.firstIndex(where: { $0.objectID == objectID }) {
                             self.persistedQueryAnswers.remove(at: index)
                         }
                         self.sidePanel.removeItem(at: indexPath.row)

@@ -11,8 +11,8 @@ import Foundation
 // MARK: - Network Manager
 class NetworkManager {
     static let shared = NetworkManager()
-//    private let baseURL = "https://compass-ai-internal-api.com"
-    private let baseURL = "http://127.0.0.1:8000"
+    private let baseURL = "https://compass-ai-internal-api.com"
+//    private let baseURL = "http://127.0.0.1:8000"
     
     private init() {}
     
