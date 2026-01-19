@@ -339,7 +339,8 @@ private class QueryHistoryCellInternal: UITableViewCell {
             categoryLabel.text = categoryName
         }
         else {
-            categoryLabel.text = "Unknown Category"
+            categoryLabel.text = ""
+//            categoryLabel.text = "Unknown Category"
         }
     }
 }
