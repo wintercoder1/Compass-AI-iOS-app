@@ -8,32 +8,11 @@
 import UIKit
 import Foundation
 
-//// MARK: - Network Error
-//enum NetworkError: Error {
-//    case invalidURL
-//    case httpError(Int)
-//    case noData
-//    case decodingError
-//    
-//    var localizedDescription: String {
-//        switch self {
-//        case .invalidURL:
-//            return "Invalid URL"
-//        case .httpError(let code):
-//            return "HTTP Error: \(code)"
-//        case .noData:
-//            return "No data received"
-//        case .decodingError:
-//            return "Failed to decode response"
-//        }
-//    }
-//}
-
 // MARK: - Network Manager
 class NetworkManager {
     static let shared = NetworkManager()
-    private let baseURL = "https://compass-ai-internal-api.com"
-//    private let baseURL = "http://127.0.0.1:8000"
+//    private let baseURL = "https://compass-ai-internal-api.com"
+    private let baseURL = "http://127.0.0.1:8000"
     
     private init() {}
     
@@ -54,6 +33,11 @@ class NetworkManager {
         print("Making request to: \(url.absoluteString)")
         
         URLSession.shared.dataTask(with: request) { data, response, error in
+            
+//            print("\n\nRaw data:     \(String(describing: data)) \n\n")
+            print("\n\nRaw response: \(String(describing: request)) \n\n")
+            print("\n\nRaw error:    \(String(describing: error)) \n\n")
+            
             if let error = error {
                 print("Network error: \(error.localizedDescription)")
                 completion(.failure(.httpError(0)))

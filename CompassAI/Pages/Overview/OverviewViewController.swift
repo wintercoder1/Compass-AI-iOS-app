@@ -23,6 +23,7 @@ class OverviewViewController: BaseViewController {
     private var bannerView: BannerView!
     
     private var analysis: OrganizationAnalysis?
+    private var category: CurrentSearchCategory?
     private var organizationName: String = ""
     private weak var coordinator: AppCoordinator?
     private var isSaved: Bool = false
@@ -38,12 +39,29 @@ class OverviewViewController: BaseViewController {
     
     func configure(with analysis: OrganizationAnalysis, organizationName: String, coordinator: AppCoordinator) {
         self.analysis = analysis
+        self.category = analysis.category
         self.organizationName = organizationName
         self.coordinator = coordinator
         
         if isViewLoaded {
             updateContent()
             checkIfAlreadySaved()
+        }
+    }
+    
+    //
+    func configureWithPersistedData(analysis: OrganizationAnalysis, organizationName: String, coordinator: AppCoordinator) {
+        self.analysis = analysis
+        self.category = analysis.category
+        self.organizationName = organizationName
+        self.coordinator = coordinator
+        
+        // Mark as already saved since this is persisted data
+        self.isSaved = true
+        
+        if isViewLoaded {
+            updateContent()
+            updateSaveButtonAppearance()
         }
     }
 
@@ -251,7 +269,11 @@ class OverviewViewController: BaseViewController {
         
         // Overview title
         let overviewLabel = UILabel()
-        overviewLabel.text = "Overview for \(organizationName)"
+        if self.category == CurrentSearchCategory.politicalLeaning || self.category == nil {
+            overviewLabel.text = "Overview for \(organizationName)"
+        } else {
+            overviewLabel.text = "\(String(describing: self.category!.rawValue)) Overview for \(organizationName)"
+        }
         overviewLabel.font = UIFont.systemFont(ofSize: 28, weight: .bold)
         overviewLabel.textColor = .black
         overviewLabel.numberOfLines = 0
@@ -264,17 +286,18 @@ class OverviewViewController: BaseViewController {
         leanStackView.spacing = 4
         leanStackView.translatesAutoresizingMaskIntoConstraints = false
         
-        let leanTitleLabel = UILabel()
-        leanTitleLabel.text = "Lean:"
-        leanTitleLabel.font = UIFont.systemFont(ofSize: 16)
-        leanTitleLabel.textColor = .systemGray
+        if self.category == CurrentSearchCategory.politicalLeaning {
+            let leanTitleLabel = UILabel()
+            leanTitleLabel.text = "Lean:"
+            leanTitleLabel.font = UIFont.systemFont(ofSize: 16)
+            leanTitleLabel.textColor = .systemGray
+            leanStackView.addArrangedSubview(leanTitleLabel)
+        }
         
         let leanValueLabel = UILabel()
         leanValueLabel.text = analysis.lean.trimmingCharacters(in: .whitespaces).capitalized
         leanValueLabel.font = UIFont.systemFont(ofSize: 32, weight: .bold)
         leanValueLabel.textColor = .black
-        
-        leanStackView.addArrangedSubview(leanTitleLabel)
         leanStackView.addArrangedSubview(leanValueLabel)
         
         let ratingLabel = UILabel()
@@ -479,6 +502,8 @@ class OverviewViewController: BaseViewController {
             )
         } else {
             // Save the analysis
+            print("Overview will try to be saved with category: \(analysis.category)")
+            // TODO: Make sure that the cateogry of each query is saved correctly.
             CoreDataHelper.addPersistedQueryAnswer(
                 context: context,
                 analysis: analysis,
@@ -497,20 +522,6 @@ class OverviewViewController: BaseViewController {
         }
     }
     
-    // Add this method to your OverviewViewController class
-    func configureWithPersistedData(analysis: OrganizationAnalysis, organizationName: String, coordinator: AppCoordinator) {
-        self.analysis = analysis
-        self.organizationName = organizationName
-        self.coordinator = coordinator
-        
-        // Mark as already saved since this is persisted data
-        self.isSaved = true
-        
-        if isViewLoaded {
-            updateContent()
-            updateSaveButtonAppearance()
-        }
-    }
 }
 
 // MARK: - CompassAIHeaderViewDelegate

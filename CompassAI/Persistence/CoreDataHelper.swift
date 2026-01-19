@@ -15,6 +15,7 @@ class CoreDataHelper {
             let qa = QueryAnswerObject(context: context)
             qa.date_persisted = Date()
             qa.topic = organizationName ?? analysis.topic
+            qa.category = analysis.category.rawValue // Important.
             qa.lean = analysis.lean
             qa.rating = Int16(analysis.rating)
             qa.context = analysis.description

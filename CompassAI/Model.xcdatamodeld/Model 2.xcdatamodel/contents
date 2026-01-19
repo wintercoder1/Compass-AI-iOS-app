@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24299" systemVersion="25C56" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+    <entity name="FinancialContribution_ContributionTotals_ListItem" representedClassName="FinancialContribution_ContributionTotals_ListItem" syncable="YES" codeGenerationType="class">
+        <attribute name="number_of_contributions" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="recipient_id" optional="YES" attributeType="String"/>
+        <attribute name="recipient_name" optional="YES" attributeType="String"/>
+        <attribute name="total_contribution_amount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="FinancialContribution_LeadershipContributorsToCommittee_ListItem" representedClassName="FinancialContribution_LeadershipContributorsToCommittee_ListItem" syncable="YES" codeGenerationType="class">
+        <attribute name="employer" optional="YES" attributeType="String"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="occupation" optional="YES" attributeType="String"/>
+        <attribute name="transaction_amount" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="FinancialContribution_PercentContributions" representedClassName="FinancialContribution_PercentContributions" syncable="YES" codeGenerationType="class">
+        <attribute name="percent_to_democrats" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="percent_to_republicans" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="total_contributions" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="total_to_democrats" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="total_to_republicans" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="FinancialContributionsOverview" representedClassName="FinancialContributionsOverview" syncable="YES" codeGenerationType="class">
+        <attribute name="committee_id" optional="YES" attributeType="String"/>
+        <attribute name="committee_name" optional="YES" attributeType="String"/>
+        <attribute name="cycle_end_year" optional="YES" attributeType="String"/>
+        <attribute name="downvote_count" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="fec_financial_contributions_summary_text" optional="YES" attributeType="String"/>
+        <attribute name="leadership_contributors_to_committee" optional="YES" attributeType="String"/>
+        <attribute name="normalized_topic_name" optional="YES" attributeType="String"/>
+        <attribute name="query_type" optional="YES" attributeType="String"/>
+        <attribute name="time_range_of_data" optional="YES" attributeType="String"/>
+        <attribute name="timestamp" optional="YES" attributeType="String"/>
+        <attribute name="topic" optional="YES" attributeType="String"/>
+        <attribute name="upvote_count" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="contributions_totals_list" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="FinancialContribution_ContributionTotals_ListItem"/>
+        <relationship name="leadership_contributions_list" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="FinancialContribution_LeadershipContributorsToCommittee_ListItem"/>
+        <relationship name="percent_contributions" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="FinancialContribution_PercentContributions"/>
+    </entity>
+    <entity name="QueryAnswerObject" representedClassName="QueryAnswerObject" syncable="YES" codeGenerationType="class">
+        <attribute name="category" optional="YES" attributeType="String"/>
+        <attribute name="citation" optional="YES" attributeType="String"/>
+        <attribute name="context" optional="YES" attributeType="String"/>
+        <attribute name="created_with_financial_contributions_info" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="date_created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="date_persisted" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="downvote_count" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lean" optional="YES" attributeType="String"/>
+        <attribute name="normalized_topic_name" optional="YES" attributeType="String"/>
+        <attribute name="query_type" optional="YES" attributeType="String"/>
+        <attribute name="rating" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="text" optional="YES" attributeType="String"/>
+        <attribute name="timestamp" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="topic" optional="YES" attributeType="String"/>
+        <attribute name="upvote_count" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="finanicial_contributions_overview" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="FinancialContributionsOverview"/>
+    </entity>
+</model>

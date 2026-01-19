@@ -181,7 +181,7 @@ struct PoliticalLeaningResponse: Codable {
 // Used for DEI Friendliness, Wokeness, Environmental Impact, Immigration Support, Technology Innovation
 struct CategoryAnalysisResponse: Codable {
     let normalizedTopicName: String?
-    let timestamp: String?
+    let timestamp: Double?
     let topic: String?
     let rating: FlexibleInt
     let context: String
