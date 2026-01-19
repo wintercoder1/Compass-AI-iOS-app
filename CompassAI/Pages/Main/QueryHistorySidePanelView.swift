@@ -265,8 +265,9 @@ extension QueryHistorySidePanelView: UITableViewDataSource, UITableViewDelegate 
 // MARK: - Internal Query History Cell
 private class QueryHistoryCellInternal: UITableViewCell {
     private let topicLabel = UILabel()
-    private let dateLabel = UILabel()
-    private let ratingLabel = UILabel()
+    private let categoryLabel = UILabel()
+//    private let dateLabel = UILabel()
+//    private let ratingLabel = UILabel()
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -284,32 +285,47 @@ private class QueryHistoryCellInternal: UITableViewCell {
         topicLabel.numberOfLines = 2
         topicLabel.translatesAutoresizingMaskIntoConstraints = false
         
-        // Date label
-        dateLabel.font = UIFont.systemFont(ofSize: 12)
-        dateLabel.textColor = .systemGray
-        dateLabel.translatesAutoresizingMaskIntoConstraints = false
         
-        // Rating label
-        ratingLabel.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
-        ratingLabel.textColor = .systemBlue
-        ratingLabel.translatesAutoresizingMaskIntoConstraints = false
+        // Category label
+        categoryLabel.font = UIFont.systemFont(ofSize: 12)
+        categoryLabel.textColor = .black
+        categoryLabel.numberOfLines = 1
+        categoryLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+//        // Date label
+//        dateLabel.font = UIFont.systemFont(ofSize: 12)
+//        dateLabel.textColor = .systemGray
+//        dateLabel.translatesAutoresizingMaskIntoConstraints = false
+//        
+//        // Rating label
+//        ratingLabel.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+//        ratingLabel.textColor = .systemBlue
+//        ratingLabel.translatesAutoresizingMaskIntoConstraints = false
         
         contentView.addSubview(topicLabel)
-        contentView.addSubview(dateLabel)
-        contentView.addSubview(ratingLabel)
+        contentView.addSubview(categoryLabel)
+//        contentView.addSubview(dateLabel)
+//        contentView.addSubview(ratingLabel)
         
+        // TODO: Make this correct.
         NSLayoutConstraint.activate([
-            topicLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 32),
+            topicLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 15),
             topicLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 25),
-            topicLabel.trailingAnchor.constraint(equalTo: ratingLabel.leadingAnchor, constant: 0),
+            topicLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: 20),
+//            topicLabel.trailingAnchor.constraint(equalTo: ratingLabel.leadingAnchor, constant: 0),
             
-            dateLabel.topAnchor.constraint(equalTo: topicLabel.bottomAnchor, constant: 4),
-            dateLabel.leadingAnchor.constraint(equalTo: topicLabel.leadingAnchor),
-            dateLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -8),
+            categoryLabel.topAnchor.constraint(equalTo: topicLabel.bottomAnchor, constant: 4),
+            categoryLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 25),
+            categoryLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: 0),
             
-            ratingLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            ratingLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            ratingLabel.widthAnchor.constraint(equalToConstant: 60)
+            
+//            dateLabel.topAnchor.constraint(equalTo: topicLabel.bottomAnchor, constant: 4),
+//            dateLabel.leadingAnchor.constraint(equalTo: topicLabel.leadingAnchor),
+//            dateLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -8),
+//            
+//            ratingLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+//            ratingLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+//            ratingLabel.widthAnchor.constraint(equalToConstant: 60)
         ])
     }
     
@@ -318,6 +334,12 @@ private class QueryHistoryCellInternal: UITableViewCell {
             topicLabel.text = topicName
         } else {
             topicLabel.text = "Unknown Topic"
+        }
+        if let categoryName = queryAnswer.category {
+            categoryLabel.text = categoryName
+        }
+        else {
+            categoryLabel.text = "Unknown Category"
         }
     }
 }

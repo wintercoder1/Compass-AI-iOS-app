@@ -210,7 +210,7 @@ class OverviewViewController: BaseViewController {
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             
             // Card view
-            cardView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            cardView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 28),
             cardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             cardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             
@@ -254,6 +254,7 @@ class OverviewViewController: BaseViewController {
         guard let analysis = analysis else { return }
     
 //        print("Analysis: \(analysis)")
+//        print("Updated content with category: \(analysis.category)")
         
         // Clear existing content in card
         cardView.subviews.forEach { subview in
@@ -269,7 +270,8 @@ class OverviewViewController: BaseViewController {
         
         // Overview title
         let overviewLabel = UILabel()
-        if self.category == CurrentSearchCategory.politicalLeaning || self.category == nil {
+        if self.category == CurrentSearchCategory.politicalLeaning ||
+           self.category == CurrentSearchCategory.undefined || self.category == nil {
             overviewLabel.text = "Overview for \(organizationName)"
         } else {
             overviewLabel.text = "\(String(describing: self.category!.rawValue)) Overview for \(organizationName)"
@@ -362,7 +364,7 @@ class OverviewViewController: BaseViewController {
             stackView.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 30),
             stackView.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 30),
             stackView.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -30),
-            stackView.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -30)
+            stackView.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -55)
         ])
     }
     

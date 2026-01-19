@@ -247,6 +247,9 @@ class NetworkManager {
                     completion(.failure(error))
                 }
             }
+            
+        case .undefined:
+            break
         }
     }
     

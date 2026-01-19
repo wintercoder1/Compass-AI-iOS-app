@@ -16,6 +16,7 @@ enum CurrentSearchCategory: String, CaseIterable {
     case immigrationSupport = "Immigration Support"
     case technologyInnovation = "Technology Innovation"
     case financialContributions = "Financial Contributions"
+    case undefined = "Undefined"
     
     /// Returns the question text for the search page based on category
     var searchPromptText: String {
@@ -34,6 +35,8 @@ enum CurrentSearchCategory: String, CaseIterable {
             return "What organization do you want to assess for technology innovation?"
         case .financialContributions:
             return "What organization do you want to review financial contributions for?"
+        case .undefined:
+            return "Undefined query"
         }
     }
     
@@ -59,6 +62,8 @@ enum CurrentSearchCategory: String, CaseIterable {
             return "lightbulb"
         case .financialContributions:
             return "dollarsign.circle"
+        case .undefined:
+            return "building.columns"
         }
     }
     
@@ -79,6 +84,8 @@ enum CurrentSearchCategory: String, CaseIterable {
             return "/getTechnologyInnovationScore"
         case .financialContributions:
             return "/getFinancialContributionsOverview"
+        case .undefined:
+            return ""
         }
     }
     
@@ -148,6 +155,8 @@ enum CurrentSearchCategory: String, CaseIterable {
         case .financialContributions:
             // Financial contributions typically don't use the same rating scale
             return "See Details"
+            
+        case .undefined: return ""
         }
     }
     
@@ -161,6 +170,7 @@ enum CurrentSearchCategory: String, CaseIterable {
         case .immigrationSupport: return "Anti-Immigration"
         case .technologyInnovation: return "Not Innovative"
         case .financialContributions: return "Democrat"
+        case .undefined: return ""
         }
     }
     
@@ -174,6 +184,7 @@ enum CurrentSearchCategory: String, CaseIterable {
         case .immigrationSupport: return "Pro-Immigration"
         case .technologyInnovation: return "Highly Innovative"
         case .financialContributions: return "Republican"
+        case .undefined: return ""
         }
     }
 }
