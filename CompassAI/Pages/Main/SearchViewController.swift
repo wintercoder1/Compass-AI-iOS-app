@@ -110,6 +110,12 @@ class SearchViewController: BaseViewController {
         let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeToOpenPanel))
         swipeRight.direction = .right
         view.addGestureRecognizer(swipeRight)
+        
+        // Enable edge swipe gesture (like back gesture)
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false // Disable default back gesture
+//        let edgeSwipe = UIScreenEdgePanGestureRecognizer(target: self, action: #selector(handleEdgeSwipeToOpenPanel))
+//        edgeSwipe.edges = .left
+//        view.addGestureRecognizer(edgeSwipe)
     }
     
     private func setupSidePanel() {
@@ -274,6 +280,14 @@ class SearchViewController: BaseViewController {
     }
     
     @objc private func handleSwipeToOpenPanel() {
+        if !sidePanel.isVisible {
+            dismissAllDropdowns()
+            sidePanel.show()
+        }
+    }
+    
+    // TODO: Probably delete this.
+    @objc private func handleEdgeSwipeToOpenPanel() {
         if !sidePanel.isVisible {
             dismissAllDropdowns()
             sidePanel.show()
