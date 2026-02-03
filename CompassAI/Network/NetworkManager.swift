@@ -217,7 +217,10 @@ class NetworkManager {
             getTechnologyInnovationScore(for: topic) { result in
                 self.handleCategoryResponse(result, topic: topic, category: category, completion: completion)
             }
-            
+//        case .epsteinFilesConections:
+//            getTechnologyInnovationScore(for: topic) { result in
+//                self.handleCategoryResponse(result, topic: topic, category: category, completion: completion)
+//            }
         case .financialContributions:
             getFinancialContributionsOverview(for: topic) { result in
                 switch result {

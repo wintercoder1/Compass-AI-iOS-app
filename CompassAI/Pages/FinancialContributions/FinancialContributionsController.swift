@@ -46,12 +46,12 @@ class FinancialContributionsViewController: BaseViewController {
         self.navigationController?.interactivePopGestureRecognizer?.delegate = self
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        print("viewModel")
-        print(viewModel)
-        print("financialContributions")
-        print(financialContributions)
-    }
+//    override func viewDidAppear(_ animated: Bool) {
+//        print("viewModel")
+//        print(viewModel)
+//        print("financialContributions")
+//        print(financialContributions)
+//    }
     
     func configure(organizationName: String, viewModel: FinancialContributionsViewModel, coordinator: AppCoordinator) {
         self.organizationName = organizationName

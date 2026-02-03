@@ -16,6 +16,7 @@ enum CurrentSearchCategory: String, CaseIterable {
     case immigrationSupport = "Immigration Support"
     case technologyInnovation = "Technology Innovation"
     case financialContributions = "Financial Contributions"
+//    case epsteinFilesConections = "Epstein Connections"
     case undefined = "Undefined"
     
     /// Returns the question text for the search page based on category
@@ -35,6 +36,8 @@ enum CurrentSearchCategory: String, CaseIterable {
             return "What organization do you want to assess for technology innovation?"
         case .financialContributions:
             return "What organization do you want to review financial contributions for?"
+//        case .epsteinFilesConections:
+//            return "What organization do you want to review for connections to Jeffery Epstein?"
         case .undefined:
             return "Undefined query"
         }
@@ -62,6 +65,8 @@ enum CurrentSearchCategory: String, CaseIterable {
             return "lightbulb"
         case .financialContributions:
             return "dollarsign.circle"
+//        case .epsteinFilesConections:
+//            return "doc.text.magnifyingglass"
         case .undefined:
             return "building.columns"
         }
@@ -84,6 +89,8 @@ enum CurrentSearchCategory: String, CaseIterable {
             return "/getTechnologyInnovationScore"
         case .financialContributions:
             return "/getFinancialContributionsOverview"
+//        case .epsteinFilesConections:
+//            return "/getFinancialContributionsOverview" // Obviously change this.
         case .undefined:
             return ""
         }
@@ -152,6 +159,16 @@ enum CurrentSearchCategory: String, CaseIterable {
             default: return "Unknown"
             }
             
+//        case .epsteinFilesConections:
+//            switch rating {
+//            case 1: return "No Connection"
+//            case 2: return "Maybe Have Talked With Once"
+//            case 3: return "Passing Acquaintance"
+//            case 4: return "Met Multiple Times"
+//            case 5: return "Closely Connected"
+//            default: return "Unknown"
+//            }
+            
         case .financialContributions:
             // Financial contributions typically don't use the same rating scale
             return "See Details"
@@ -170,6 +187,7 @@ enum CurrentSearchCategory: String, CaseIterable {
         case .immigrationSupport: return "Anti-Immigration"
         case .technologyInnovation: return "Not Innovative"
         case .financialContributions: return "Democrat"
+//        case .epsteinFilesConections: return "No Connection"
         case .undefined: return ""
         }
     }
@@ -184,6 +202,7 @@ enum CurrentSearchCategory: String, CaseIterable {
         case .immigrationSupport: return "Pro-Immigration"
         case .technologyInnovation: return "Highly Innovative"
         case .financialContributions: return "Republican"
+//        case .epsteinFilesConections: return "Closely Connected"
         case .undefined: return ""
         }
     }

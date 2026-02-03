@@ -237,7 +237,7 @@ class CategorySelectorView: UIView {
 extension CategorySelectorView: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categories.count
+        return categories.count - 1 // The minus one is to keep out the 'undefined' category
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
