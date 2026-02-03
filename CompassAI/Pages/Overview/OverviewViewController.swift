@@ -10,7 +10,7 @@ import CoreData
 import GoogleMobileAds
 
 // MARK: - Results View Controller
-class OverviewViewController: BaseViewController {
+class OverviewViewController: BaseViewController, BannerViewDelegate  {
     
     private let scrollView = UIScrollView()
     private let contentView = UIView()
@@ -33,7 +33,7 @@ class OverviewViewController: BaseViewController {
         setupUI()
         setupConstraints()
         
-        setupBannerAdContent()
+//        setupBannerAdContent() // view will appear
 //        self.navigationController?.interactivePopGestureRecognizer?.delegate = self
     }
     
@@ -129,19 +129,7 @@ class OverviewViewController: BaseViewController {
         view.addSubview(saveButton)
     }
     
-    private func setupBannerAdUI() {
-        // Initialize the banner view.
-        bannerView = BannerView()
-
-        bannerView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(bannerView)
-    }
     
-    private func setupBannerAdContent() {
-        // Request an anchored adaptive banner with a width of 375.
-        bannerView.adSize = currentOrientationAnchoredAdaptiveBanner(width: 375)
-        bannerView.load(Request())
-    }
     
     private func updateSaveButtonAppearance() {
         let heartImageName = isSaved ? "heart.fill" : "heart"
@@ -529,6 +517,43 @@ class OverviewViewController: BaseViewController {
         }
     }
     
+    // MARK: - Google AdMob
+    // TODO: Test This!!!
+    /*
+    *  Google Ad Mob
+    *
+    *  Test This!!!
+    *
+    */
+    private func setupBannerAdUI() {
+        bannerView = BannerView() // Use GADBannerView instead of BannerView
+        //
+        //
+        //TODO: Put in correct adUnitID !!!
+        //
+        //
+        bannerView.adUnitID = "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX" // Add your ad unit ID
+        //
+        //  ^^^^^^^^^^ this won't work if this is not correctly set!!
+        //
+        //
+        bannerView.rootViewController = self // Critical!
+        bannerView.delegate = self // Set delegate
+        bannerView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(bannerView)
+    }
+    
+    private func setupBannerAdContent() {
+        bannerView.adSize = currentOrientationAnchoredAdaptiveBanner(width: view.frame.width)
+        bannerView.load(Request()) // Use GADRequest instead of Request
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // Load ad after view has appeared
+        setupBannerAdContent()
+    }
+    
 }
 
 // MARK: - CompassAIHeaderViewDelegate
@@ -553,5 +578,16 @@ extension OverviewViewController: UIGestureRecognizerDelegate {
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
+    }
+}
+
+// MARK: - GADBannerViewDelegate
+extension OverviewViewController {
+    func bannerViewDidReceiveAd(_ bannerView: BannerView) {
+        print("✅ Banner ad loaded successfully")
+    }
+    
+    func bannerView(_ bannerView: BannerView, didFailToReceiveAdWithError error: Error) {
+        print("❌ Banner ad failed to load: \(error.localizedDescription)")
     }
 }
