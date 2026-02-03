@@ -79,10 +79,10 @@ class SearchViewController: BaseViewController {
         setupCard()
         setupFooter()
         
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(dismissAllDropdowns))
-        tapGestureRecognizer.cancelsTouchesInView = false
-        tapGestureRecognizer.delegate = self
-        view.addGestureRecognizer(tapGestureRecognizer)
+//        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(dismissAllDropdowns))
+//        tapGestureRecognizer.cancelsTouchesInView = false
+//        tapGestureRecognizer.delegate = self
+//        view.addGestureRecognizer(tapGestureRecognizer)
     }
     
     private func setupCategorySelector() {
@@ -461,26 +461,26 @@ extension SearchViewController: QueryHistorySidePanelViewDelegate {
 }
 
 // MARK: - UIGestureRecognizerDelegate
-extension SearchViewController: UIGestureRecognizerDelegate {
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-        // Edge case. IDK.
-        let locationInCategorySelectorCard = touch.location(in: cardView)
-        if cardView.bounds.contains(locationInCategorySelectorCard) {
-            return true
-        }// ^^ Maybe find a better way to do this?
-        
-        // Don't intercept touches on the text field
-        if touch.view == searchTextField {
-            return false
-        }
-        
-        // Don't intercept touches on category selector
-        let locationInCategorySelector = touch.location(in: categorySelector)
-        if categorySelector.bounds.contains(locationInCategorySelector) {
-            return false
-        }
-        
-        // Allow gesture to proceed for touches outside dropdown (so dismissAllDropdowns gets called)
-        return true
-    }
-}
+//extension SearchViewController: UIGestureRecognizerDelegate {
+//    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+//        // Edge case. IDK.
+//        let locationInCategorySelectorCard = touch.location(in: cardView)
+//        if cardView.bounds.contains(locationInCategorySelectorCard) {
+//            return true
+//        }// ^^ Maybe find a better way to do this?
+//        
+//        // Don't intercept touches on the text field
+//        if touch.view == searchTextField {
+//            return false
+//        }
+//        
+//        // Don't intercept touches on category selector
+//        let locationInCategorySelector = touch.location(in: categorySelector)
+//        if categorySelector.bounds.contains(locationInCategorySelector) {
+//            return false
+//        }
+//        
+//        // Allow gesture to proceed for touches outside dropdown (so dismissAllDropdowns gets called)
+//        return true
+//    }
+//}

@@ -34,7 +34,7 @@ class OverviewViewController: BaseViewController {
         setupConstraints()
         
         setupBannerAdContent()
-        self.navigationController?.interactivePopGestureRecognizer?.delegate = self
+//        self.navigationController?.interactivePopGestureRecognizer?.delegate = self
     }
     
     func configure(with analysis: OrganizationAnalysis, organizationName: String, coordinator: AppCoordinator) {
@@ -76,6 +76,11 @@ class OverviewViewController: BaseViewController {
         } else {
             updateSaveButtonAppearance()
         }
+        
+        // 
+        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+        self.navigationController?.interactivePopGestureRecognizer?.delegate = self
+
     }
     
     private func setupUI() {
@@ -534,9 +539,19 @@ extension OverviewViewController: CompassAIHeaderViewDelegate {
 }
 
 //
-extension OverviewViewController:UIGestureRecognizerDelegate {
+//extension OverviewViewController:UIGestureRecognizerDelegate {
+//    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+//        return true
+//    }
+//}
+
+// Update the UIGestureRecognizerDelegate extension:
+extension OverviewViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        return self.navigationController?.viewControllers.count ?? 0 > 1
+    }
+    
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
     }
 }
-

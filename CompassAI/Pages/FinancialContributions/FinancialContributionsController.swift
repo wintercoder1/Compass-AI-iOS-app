@@ -34,9 +34,16 @@ class FinancialContributionsViewController: BaseViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.navigationController?.interactivePopGestureRecognizer?.delegate = self
         setupUI()
         setupConstraints()
         bindViewModel()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+        self.navigationController?.interactivePopGestureRecognizer?.delegate = self
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -1010,5 +1017,16 @@ class FinancialContributionsViewController: BaseViewController {
 extension FinancialContributionsViewController: CompassAIHeaderViewDelegate {
     func headerViewBackButtonTapped(_ headerView: CompassAIHeaderView) {
         coordinator?.navigateBack()
+    }
+}
+
+// MARK: - UIGestureRecognizerDelegate
+extension FinancialContributionsViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        return self.navigationController?.viewControllers.count ?? 0 > 1
+    }
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
     }
 }
