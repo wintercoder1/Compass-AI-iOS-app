@@ -203,7 +203,7 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             
             // Card view
-            cardView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 28),
+            cardView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
             cardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             cardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             
@@ -218,16 +218,20 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
             // intrinsic content size to size the view.
 //            NSLayoutConstraint.activate([
           // Align the banner's bottom edge with the safe area's bottom edge
-            bannerView.topAnchor.constraint(greaterThanOrEqualTo: cardView.bottomAnchor, constant: 10),
+            bannerView.topAnchor.constraint(greaterThanOrEqualTo: cardView.bottomAnchor, constant: 20),
+            // banerview padding
+            bannerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            bannerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            
 //              bannerView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
 //            bannerView.bottomAnchor.constraint(equalTo: footerStackView.bottomAnchor),
           // Center the banner horizontally in the view
             bannerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-//            ])
+            
             
             // Footer
             // With banner
-            footerStackView.topAnchor.constraint(greaterThanOrEqualTo: bannerView.bottomAnchor, constant: 10),
+            footerStackView.topAnchor.constraint(greaterThanOrEqualTo: bannerView.bottomAnchor, constant: 20),
             // Without banner
 //            footerStackView.topAnchor.constraint(greaterThanOrEqualTo: cardView.bottomAnchor, constant: 25),
             footerStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 0),
@@ -532,7 +536,8 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
         //TODO: Put in correct adUnitID !!!
         //
         //
-        bannerView.adUnitID = "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX" // Add your ad unit ID
+        bannerView.adUnitID = "ca-app-pub-3940256099942544/2934735716"
+        //bannerView.adUnitID = "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX" // Add your ad unit ID
         //
         //  ^^^^^^^^^^ this won't work if this is not correctly set!!
         //
