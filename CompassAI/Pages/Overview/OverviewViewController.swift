@@ -108,7 +108,7 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
     
     private func setupCard() {
         cardView.backgroundColor = .white
-        cardView.layer.cornerRadius = 16
+        cardView.layer.cornerRadius = 0  // ← Changed from 16 to 0
         cardView.layer.shadowColor = UIColor.black.cgColor
         cardView.layer.shadowOffset = CGSize(width: 0, height: 8)
         cardView.layer.shadowRadius = 16
@@ -117,6 +117,30 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
         
         contentView.addSubview(cardView)
     }
+    
+//    private func setupCard() {
+//        cardView.backgroundColor = .white
+//        cardView.layer.cornerRadius = 16
+//        cardView.layer.shadowColor = UIColor.black.cgColor
+//        cardView.layer.shadowOffset = CGSize(width: 0, height: 8)
+//        cardView.layer.shadowRadius = 16
+//        cardView.layer.shadowOpacity = 0.1
+//        cardView.translatesAutoresizingMaskIntoConstraints = false
+//        
+//        contentView.addSubview(cardView)
+//    }
+    
+//    private func setupCard() {
+//        cardView.backgroundColor = .white
+//        cardView.layer.cornerRadius = 16
+//        cardView.layer.shadowColor = UIColor.black.cgColor
+//        cardView.layer.shadowOffset = CGSize(width: 0, height: 8)
+//        cardView.layer.shadowRadius = 16
+//        cardView.layer.shadowOpacity = 0.1
+//        cardView.translatesAutoresizingMaskIntoConstraints = false
+//        
+//        contentView.addSubview(cardView)
+//    }
     
     private func setupSaveButton() {
         saveButton = UIButton(type: .system)

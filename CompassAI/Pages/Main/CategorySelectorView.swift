@@ -52,7 +52,7 @@ class CategorySelectorView: UIView {
     private func setupContainerButton() {
         // Container button styling
         containerButton.backgroundColor = .white
-        containerButton.layer.cornerRadius = 10
+        containerButton.layer.cornerRadius = 0  // ← Changed from 10 to 0
         containerButton.layer.borderWidth = 1
         containerButton.layer.borderColor = UIColor.systemGray4.cgColor
         containerButton.layer.shadowColor = UIColor.black.cgColor
@@ -96,7 +96,7 @@ class CategorySelectorView: UIView {
     private func setupDropdown() {
         // Dropdown container
         dropdownContainer.backgroundColor = .white
-        dropdownContainer.layer.cornerRadius = 10
+        dropdownContainer.layer.cornerRadius = 0  // ← Changed from 10 to 0
         dropdownContainer.layer.borderWidth = 1
         dropdownContainer.layer.borderColor = UIColor.systemGray4.cgColor
         dropdownContainer.layer.shadowColor = UIColor.black.cgColor
@@ -114,14 +114,14 @@ class CategorySelectorView: UIView {
         dropdownTableView.backgroundColor = .white
         dropdownTableView.separatorStyle = .singleLine
         dropdownTableView.separatorInset = UIEdgeInsets(top: 0, left: 14, bottom: 0, right: 14)
-        dropdownTableView.layer.cornerRadius = 10
+        dropdownTableView.layer.cornerRadius = 0  // ← Changed from 10 to 0
         dropdownTableView.clipsToBounds = true
         dropdownTableView.translatesAutoresizingMaskIntoConstraints = false
         dropdownTableView.register(CategoryDropdownCell.self, forCellReuseIdentifier: "CategoryDropdownCell")
         dropdownTableView.isScrollEnabled = true
         dropdownTableView.showsVerticalScrollIndicator = true
         dropdownContainer.addSubview(dropdownTableView)
-        
+
         let dropdownHeight = min(CGFloat(categories.count) * rowHeight, maxVisibleRows * rowHeight)
         dropdownHeightConstraint = dropdownContainer.heightAnchor.constraint(equalToConstant: dropdownHeight)
         

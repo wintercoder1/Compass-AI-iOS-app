@@ -42,7 +42,7 @@ class CompanySuggestionDropdownView: UIView {
     private func setupUI() {
         // Container styling - matches the website look
         dropdownContainer.backgroundColor = .white
-        dropdownContainer.layer.cornerRadius = 12
+        dropdownContainer.layer.cornerRadius = 0  // ← Changed from 12 to 0
         dropdownContainer.layer.borderWidth = 1
         dropdownContainer.layer.borderColor = UIColor.systemGray4.cgColor
         dropdownContainer.layer.shadowColor = UIColor.black.cgColor
@@ -61,7 +61,7 @@ class CompanySuggestionDropdownView: UIView {
         tableView.separatorStyle = .singleLine
         tableView.separatorColor = UIColor.systemGray5
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
-        tableView.layer.cornerRadius = 12
+        tableView.layer.cornerRadius = 0  // ← Changed from 12 to 0
         tableView.clipsToBounds = true
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.register(CompanySuggestionCell.self, forCellReuseIdentifier: "CompanySuggestionCell")

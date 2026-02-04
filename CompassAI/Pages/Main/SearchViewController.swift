@@ -79,10 +79,6 @@ class SearchViewController: BaseViewController {
         setupCard()
         setupFooter()
         
-//        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(dismissAllDropdowns))
-//        tapGestureRecognizer.cancelsTouchesInView = false
-//        tapGestureRecognizer.delegate = self
-//        view.addGestureRecognizer(tapGestureRecognizer)
     }
     
     private func setupCategorySelector() {
@@ -134,6 +130,50 @@ class SearchViewController: BaseViewController {
     
     private func setupCard() {
         cardView.backgroundColor = .white
+        cardView.layer.cornerRadius = 0  // ← Changed from 16 to 0
+        cardView.layer.shadowColor = UIColor.black.cgColor
+        cardView.layer.shadowOffset = CGSize(width: 0, height: 8)
+        cardView.layer.shadowRadius = 16
+        cardView.layer.shadowOpacity = 0.1
+        cardView.clipsToBounds = false
+        cardView.translatesAutoresizingMaskIntoConstraints = false
+        
+        titleLabel.text = "What organization do you want to find the political leaning of?"
+        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .medium)
+        titleLabel.textColor = .black
+        titleLabel.numberOfLines = 0
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Search text field - original style
+        searchTextField.placeholder = "Type here..."
+        searchTextField.font = UIFont.systemFont(ofSize: 16)
+        searchTextField.borderStyle = .roundedRect
+        searchTextField.layer.borderColor = UIColor.systemGray4.cgColor
+        searchTextField.layer.borderWidth = 1
+        searchTextField.layer.cornerRadius = 8
+        searchTextField.backgroundColor = .white
+        searchTextField.translatesAutoresizingMaskIntoConstraints = false
+        searchTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+        searchTextField.addTarget(self, action: #selector(textFieldDidBeginEditing), for: .editingDidBegin)
+        
+        continueButton.setTitle("Continue", for: .normal)
+        continueButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        continueButton.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
+        continueButton.setTitleColor(.white, for: .normal)
+        continueButton.layer.cornerRadius = 8
+        continueButton.isEnabled = false
+        continueButton.translatesAutoresizingMaskIntoConstraints = false
+        continueButton.addTarget(self, action: #selector(continueButtonTapped), for: .touchUpInside)
+        
+        cardView.addSubview(titleLabel)
+        cardView.addSubview(searchTextField)
+        cardView.addSubview(continueButton)
+        contentView.addSubview(cardView)
+    }
+    /*
+    private func setupCard() {
+        cardView.backgroundColor = .white
         cardView.layer.cornerRadius = 16
         cardView.layer.shadowColor = UIColor.black.cgColor
         cardView.layer.shadowOffset = CGSize(width: 0, height: 8)
@@ -175,7 +215,7 @@ class SearchViewController: BaseViewController {
         cardView.addSubview(continueButton)
         contentView.addSubview(cardView)
     }
-    
+    */
     private func setupFooter() {
         footerView = addCompassAIFooter(to: scrollView, below: cardView.bottomAnchor)
     }
@@ -459,28 +499,3 @@ extension SearchViewController: QueryHistorySidePanelViewDelegate {
         )
     }
 }
-
-// MARK: - UIGestureRecognizerDelegate
-//extension SearchViewController: UIGestureRecognizerDelegate {
-//    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-//        // Edge case. IDK.
-//        let locationInCategorySelectorCard = touch.location(in: cardView)
-//        if cardView.bounds.contains(locationInCategorySelectorCard) {
-//            return true
-//        }// ^^ Maybe find a better way to do this?
-//        
-//        // Don't intercept touches on the text field
-//        if touch.view == searchTextField {
-//            return false
-//        }
-//        
-//        // Don't intercept touches on category selector
-//        let locationInCategorySelector = touch.location(in: categorySelector)
-//        if categorySelector.bounds.contains(locationInCategorySelector) {
-//            return false
-//        }
-//        
-//        // Allow gesture to proceed for touches outside dropdown (so dismissAllDropdowns gets called)
-//        return true
-//    }
-//}
