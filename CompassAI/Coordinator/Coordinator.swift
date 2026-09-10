@@ -62,6 +62,14 @@ class AppCoordinator: Coordinator {
         navigationController.pushViewController(financialVC, animated: true)
     }
     
+    func showFinancialContributionsScreenReplacingLoading(organizationName: String, viewModel: FinancialContributionsViewModel, financialData: FinancialContributionsResponse) {
+        let financialVC = FinancialContributionsViewController()
+        financialVC.configure(organizationName: organizationName, viewModel: viewModel, coordinator: self)
+        financialVC.loadViewIfNeeded()
+        viewModel.loadPersistedData(financialData)
+        navigationController.replaceTopViewController(with: financialVC, animated: true)
+    }
+    
     func showError(message: String, from viewController: UIViewController) {
         // Remove loading screen if present
         if navigationController.topViewController is LoadingViewController {
@@ -85,12 +93,7 @@ class AppCoordinator: Coordinator {
         let financialVC = FinancialContributionsViewController()
         financialVC.configure(organizationName: organizationName, viewModel: viewModel, coordinator: self)
         
-        // Bind the callbacks
-        viewModel.onFullDataLoaded = { [weak financialVC] financialResponse in
-            financialVC?.setFinancialContributions(financialResponse)
-        }
-        
-        // Immediately load the persisted data
+        financialVC.loadViewIfNeeded()
         viewModel.loadPersistedData(financialData)
         
         navigationController.pushViewController(financialVC, animated: true)

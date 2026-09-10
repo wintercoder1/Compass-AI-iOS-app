@@ -87,7 +87,7 @@ class QueryHistorySidePanelView: UIView {
     
     private func setupHeader() {
         // Header label
-        headerLabel.text = "Saved Answers"
+        headerLabel.text = "Favorites"
         headerLabel.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
         headerLabel.textColor = .black
         headerLabel.translatesAutoresizingMaskIntoConstraints = false

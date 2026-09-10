@@ -7,6 +7,13 @@
 
 import Foundation
 
+// MARK: - App Configuration
+enum AppConfiguration {
+//    static let displayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "CorporateCompass"
+    static let displayName = "CorporateCompass"
+    static let companyName = "Covariant Apps LLC"
+}
+
 // MARK: - Search Category Enum
 enum CurrentSearchCategory: String, CaseIterable {
     case politicalLeaning = "Political Leaning"
@@ -16,6 +23,7 @@ enum CurrentSearchCategory: String, CaseIterable {
     case immigrationSupport = "Immigration Support"
     case technologyInnovation = "Technology Innovation"
     case financialContributions = "Financial Contributions"
+    case leadershipDemographics = "Leadership Demographics"
 //    case epsteinFilesConections = "Epstein Connections"
     case undefined = "Undefined"
     
@@ -36,6 +44,8 @@ enum CurrentSearchCategory: String, CaseIterable {
             return "What organization do you want to assess for technology innovation?"
         case .financialContributions:
             return "What organization do you want to review financial contributions for?"
+        case .leadershipDemographics:
+            return "What organization do you want to analyze leadership demographics for?"
 //        case .epsteinFilesConections:
 //            return "What organization do you want to review for connections to Jeffery Epstein?"
         case .undefined:
@@ -65,6 +75,8 @@ enum CurrentSearchCategory: String, CaseIterable {
             return "lightbulb"
         case .financialContributions:
             return "dollarsign.circle"
+        case .leadershipDemographics:
+            return "chart.pie"
 //        case .epsteinFilesConections:
 //            return "doc.text.magnifyingglass"
         case .undefined:
@@ -89,6 +101,8 @@ enum CurrentSearchCategory: String, CaseIterable {
             return "/getTechnologyInnovationScore"
         case .financialContributions:
             return "/getFinancialContributionsOverview"
+        case .leadershipDemographics:
+            return "/getLeadership"
 //        case .epsteinFilesConections:
 //            return "/getFinancialContributionsOverview" // Obviously change this.
         case .undefined:
@@ -172,6 +186,8 @@ enum CurrentSearchCategory: String, CaseIterable {
         case .financialContributions:
             // Financial contributions typically don't use the same rating scale
             return "See Details"
+        case .leadershipDemographics:
+            return "Demographics"
             
         case .undefined: return ""
         }
@@ -187,6 +203,7 @@ enum CurrentSearchCategory: String, CaseIterable {
         case .immigrationSupport: return "Anti-Immigration"
         case .technologyInnovation: return "Not Innovative"
         case .financialContributions: return "Democrat"
+        case .leadershipDemographics: return ""
 //        case .epsteinFilesConections: return "No Connection"
         case .undefined: return ""
         }
@@ -202,6 +219,7 @@ enum CurrentSearchCategory: String, CaseIterable {
         case .immigrationSupport: return "Pro-Immigration"
         case .technologyInnovation: return "Highly Innovative"
         case .financialContributions: return "Republican"
+        case .leadershipDemographics: return ""
 //        case .epsteinFilesConections: return "Closely Connected"
         case .undefined: return ""
         }

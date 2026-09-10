@@ -8,6 +8,7 @@
 
 import UIKit
 import Foundation
+import CoreData
 import GoogleMobileAds
 
 // MARK: - Financial Contributions View Controller
@@ -25,6 +26,7 @@ class FinancialContributionsViewController: BaseViewController {
     private let loadingLabel = UILabel()
     private let footerStackView = UIStackView()
     private let bottomPaddingView = UIView()
+    private var saveButton: UIButton!
     
     // AdMob banners
     private var bannerView1: BannerView!
@@ -34,6 +36,7 @@ class FinancialContributionsViewController: BaseViewController {
     private var viewModel: FinancialContributionsViewModel!
     private var financialContributions: FinancialContributionsResponse?
     private weak var coordinator: AppCoordinator?
+    private var isSaved: Bool = false
     
     private var maxContributionsInitiallyDisplayed = 5
     
@@ -49,6 +52,7 @@ class FinancialContributionsViewController: BaseViewController {
         super.viewWillAppear(animated)
         self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
         self.navigationController?.interactivePopGestureRecognizer?.delegate = self
+        checkIfAlreadySaved()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -104,6 +108,7 @@ class FinancialContributionsViewController: BaseViewController {
             self.updateContributionsBreakdownCard()
             self.updateLeadershipContributionsCard()
             self.updateTopRecipientsCard()
+            self.checkIfAlreadySaved()
         }
     }
     
@@ -112,7 +117,7 @@ class FinancialContributionsViewController: BaseViewController {
         
         navigationController?.setNavigationBarHidden(true, animated: false)
         
-        headerView = addCompassAIHeader(title: "Compass AI", showBackButton: true)
+        headerView = addCompassAIHeader(showBackButton: true)
         headerView.delegate = self
         
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -126,6 +131,7 @@ class FinancialContributionsViewController: BaseViewController {
         setupLeadershipContributionsCard()
         setupTopRecipientsCard()
         setupDetailsCard()
+        setupSaveButton()
         setupLoadingView()
         setupBannerAds()
         setupFooterOld()
@@ -135,7 +141,8 @@ class FinancialContributionsViewController: BaseViewController {
     private func setupBannerAds() {
         bannerView1 = BannerView()
 //        bannerView1.adUnitID = "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX" // Replace with your ad unit ID
-        bannerView1.adUnitID = "ca-app-pub-3940256099942544/2934735716"
+        bannerView1.adUnitID = AdMobConfiguration.shared.getOverviewBannerAdUnitID()
+        // bannerView1.adUnitID = "ca-app-pub-3940256099942544/2934735716"
         bannerView1.rootViewController = self
         bannerView1.delegate = self
         bannerView1.translatesAutoresizingMaskIntoConstraints = false
@@ -143,7 +150,8 @@ class FinancialContributionsViewController: BaseViewController {
         
         bannerView2 = BannerView()
 //        bannerView2.adUnitID = "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX" // Replace with your ad unit ID
-        bannerView2.adUnitID = "ca-app-pub-3940256099942544/2934735716"
+        bannerView2.adUnitID = AdMobConfiguration.shared.getOverviewBannerAdUnitID()
+        // bannerView2.adUnitID = "ca-app-pub-3940256099942544/2934735716"
         bannerView2.rootViewController = self
         bannerView2.delegate = self
         bannerView2.translatesAutoresizingMaskIntoConstraints = false
@@ -208,6 +216,28 @@ class FinancialContributionsViewController: BaseViewController {
         detailsCardView.translatesAutoresizingMaskIntoConstraints = false
         
         contentView.addSubview(detailsCardView)
+    }
+    
+    private func setupSaveButton() {
+        saveButton = UIButton(type: .system)
+        saveButton.translatesAutoresizingMaskIntoConstraints = false
+        saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
+        saveButton.isHidden = true
+        updateSaveButtonAppearance()
+        detailsCardView.addSubview(saveButton)
+    }
+    
+    private func updateSaveButtonAppearance() {
+        let heartImageName = isSaved ? "heart.fill" : "heart"
+        saveButton.setImage(UIImage(systemName: heartImageName), for: .normal)
+        saveButton.tintColor = isSaved ? .black : .systemGray
+        saveButton.backgroundColor = UIColor.white.withAlphaComponent(0.9)
+        saveButton.layer.cornerRadius = 20
+        saveButton.layer.shadowColor = UIColor.black.cgColor
+        saveButton.layer.shadowOffset = CGSize(width: 0, height: 2)
+        saveButton.layer.shadowRadius = 4
+        saveButton.layer.shadowOpacity = 0.1
+        saveButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
     }
     
     /*
@@ -307,7 +337,7 @@ class FinancialContributionsViewController: BaseViewController {
         bottomPaddingView.backgroundColor = .white
         
         let copyrightLabel = UILabel()
-        copyrightLabel.text = "  © 2025 Correlation Apps LLC. All rights reserved.  "
+        copyrightLabel.text = "  © 2026 \(AppConfiguration.companyName). All rights reserved.  "
         copyrightLabel.font = UIFont.systemFont(ofSize: 14)
         copyrightLabel.textColor = .systemGray
         copyrightLabel.textAlignment = .center
@@ -320,7 +350,7 @@ class FinancialContributionsViewController: BaseViewController {
         dataSourceLabel.numberOfLines = 0
         
         let disclaimerLabel = UILabel()
-        disclaimerLabel.text = "  This website provides information derived from publicly available data. Compass AI and Correlation Apps LLC do not endorse any political candidates or organizations mentioned.  "
+        disclaimerLabel.text = "  This website provides information derived from publicly available data. \(AppConfiguration.displayName) and \(AppConfiguration.companyName) do not endorse any political candidates or organizations mentioned.  "
         disclaimerLabel.font = UIFont.systemFont(ofSize: 12)
         disclaimerLabel.textColor = .systemGray
         disclaimerLabel.textAlignment = .center
@@ -826,6 +856,11 @@ class FinancialContributionsViewController: BaseViewController {
             detailsCardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             detailsCardView.heightAnchor.constraint(greaterThanOrEqualToConstant: 200),
             
+            saveButton.bottomAnchor.constraint(equalTo: detailsCardView.bottomAnchor, constant: -18),
+            saveButton.trailingAnchor.constraint(equalTo: detailsCardView.trailingAnchor, constant: -18),
+            saveButton.widthAnchor.constraint(equalToConstant: 40),
+            saveButton.heightAnchor.constraint(equalToConstant: 40),
+            
             contributionsBreakdownCardView.topAnchor.constraint(equalTo: detailsCardView.bottomAnchor, constant: 20),
             contributionsBreakdownCardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             contributionsBreakdownCardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
@@ -865,6 +900,7 @@ class FinancialContributionsViewController: BaseViewController {
     
     private func showLoading() {
         loadingView.isHidden = false
+        saveButton.isHidden = true
         contributionsBreakdownCardView.isHidden = true
         leadershipContributionsCardView.isHidden = true
         topRecipientsCardView.isHidden = true
@@ -875,8 +911,9 @@ class FinancialContributionsViewController: BaseViewController {
     }
     
     private func showFinancialContent(_ financialText: String) {
+        saveButton.isHidden = false
         detailsCardView.subviews.forEach { subview in
-            if subview != loadingView {
+            if subview != loadingView && subview != saveButton {
                 subview.removeFromSuperview()
             }
         }
@@ -921,7 +958,7 @@ class FinancialContributionsViewController: BaseViewController {
             stackView.topAnchor.constraint(equalTo: detailsCardView.topAnchor, constant: 30),
             stackView.leadingAnchor.constraint(equalTo: detailsCardView.leadingAnchor, constant: 30),
             stackView.trailingAnchor.constraint(equalTo: detailsCardView.trailingAnchor, constant: -30),
-            stackView.bottomAnchor.constraint(equalTo: detailsCardView.bottomAnchor, constant: -30)
+            stackView.bottomAnchor.constraint(equalTo: detailsCardView.bottomAnchor, constant: -86)
         ])
         
         updateContributionsBreakdownCard()
@@ -930,8 +967,9 @@ class FinancialContributionsViewController: BaseViewController {
     }
     
     private func showError(_ message: String) {
+        saveButton.isHidden = true
         detailsCardView.subviews.forEach { subview in
-            if subview != loadingView {
+            if subview != loadingView && subview != saveButton {
                 subview.removeFromSuperview()
             }
         }
@@ -985,6 +1023,81 @@ class FinancialContributionsViewController: BaseViewController {
     
     @objc private func retryButtonTapped() {
         viewModel.fetchFinancialContributions(for: organizationName)
+    }
+    
+    private func checkIfAlreadySaved() {
+        guard !organizationName.isEmpty else { return }
+        
+        let context = CoreDataPersistence().container.viewContext
+        let request: NSFetchRequest<QueryAnswerObject> = QueryAnswerObject.fetchRequest()
+        request.predicate = NSPredicate(
+            format: "topic == %@ AND category == %@",
+            organizationName,
+            CurrentSearchCategory.financialContributions.rawValue
+        )
+        request.fetchLimit = 1
+        
+        do {
+            isSaved = try context.fetch(request).isEmpty == false
+            updateSaveButtonAppearance()
+        } catch {
+            isSaved = false
+            updateSaveButtonAppearance()
+        }
+    }
+    
+    @objc private func saveButtonTapped() {
+        guard !organizationName.isEmpty else { return }
+        let context = CoreDataPersistence().container.viewContext
+        
+        if isSaved {
+            CoreDataHelper.removePersistedQueryAnswer(
+                context: context,
+                organizationName: organizationName,
+                category: .financialContributions
+            ) { wasRemoved in
+                DispatchQueue.main.async {
+                    self.isSaved = !wasRemoved
+                    self.updateSaveButtonAppearance()
+                }
+            }
+            return
+        }
+        
+        guard let financialContributions else { return }
+        let analysis = makeOrganizationAnalysis(from: financialContributions)
+        CoreDataHelper.addPersistedQueryAnswer(
+            context: context,
+            analysis: analysis,
+            organizationName: organizationName
+        ) { wasSaved in
+            DispatchQueue.main.async {
+                self.isSaved = wasSaved
+                self.updateSaveButtonAppearance()
+            }
+        }
+    }
+    
+    private func makeOrganizationAnalysis(from response: FinancialContributionsResponse) -> OrganizationAnalysis {
+        let financialAnalysis = FinancialContributionsAnalysis(
+            financialContributionsText: response.fecFinancialContributionsSummaryText,
+            committeeOrPACName: response.committeeName,
+            committeeOrPACID: response.committeeId,
+            percentContributions: response.percentContributions,
+            contributionTotals: response.contributionTotals,
+            leadershipContributionsToCommittee: response.leadershipContributionsToCommittee
+        )
+        
+        return OrganizationAnalysis(
+            topic: response.topic,
+            lean: "Financial Data",
+            rating: 0,
+            description: response.fecFinancialContributionsSummaryText,
+            hasFinancialContributions: true,
+            financialContributionsText: response.fecFinancialContributionsSummaryText,
+            financialContributionsOverviewAnalysis: financialAnalysis,
+            category: .financialContributions
+        )
     }
 }
 

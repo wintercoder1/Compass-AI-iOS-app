@@ -54,7 +54,19 @@ class SearchViewModel {
             case .success(let analysis):
                 DispatchQueue.main.async {
                     self?.delegate?.searchDidComplete(with: analysis)
-                    self?.coordinator?.showResultsScreen(with: analysis, organizationName: topic)
+                    
+                    if analysis.category == .financialContributions,
+                       let financialResponse = self?.financialContributionsResponse(from: analysis, organizationName: topic) {
+                        let financialViewModel = FinancialContributionsViewModel()
+                        financialViewModel.coordinator = self?.coordinator
+                        self?.coordinator?.showFinancialContributionsScreenReplacingLoading(
+                            organizationName: topic,
+                            viewModel: financialViewModel,
+                            financialData: financialResponse
+                        )
+                    } else {
+                        self?.coordinator?.showResultsScreen(with: analysis, organizationName: topic)
+                    }
                 }
                 
             case .failure(let error):
@@ -87,6 +99,18 @@ class SearchViewModel {
         organizationName: String,
         from viewController: UIViewController
     ) {
+        if analysis.category == .financialContributions,
+           let financialResponse = financialContributionsResponse(from: analysis, organizationName: organizationName) {
+            let financialViewModel = FinancialContributionsViewModel()
+            financialViewModel.coordinator = coordinator
+            coordinator?.showFinancialContributionsScreenWithPersistedData(
+                organizationName: organizationName,
+                viewModel: financialViewModel,
+                financialData: financialResponse
+            )
+            return
+        }
+        
         let overviewVC = OverviewViewController()
         
         if let coordinator = self.coordinator {
@@ -99,5 +123,30 @@ class SearchViewModel {
             
             viewController.navigationController?.pushViewController(overviewVC, animated: true)
         }
+    }
+    
+    private func financialContributionsResponse(from analysis: OrganizationAnalysis, organizationName: String) -> FinancialContributionsResponse? {
+        guard let financialData = analysis.financialContributionsOverviewAnalysis else {
+            return nil
+        }
+        
+        return FinancialContributionsResponse(
+            topic: analysis.topic,
+            normalizedTopicName: analysis.topic,
+            timestamp: nil,
+            committeeId: financialData.committeeOrPACID ?? "",
+            individualId: 0,
+            fecFinancialContributionsSummaryText: financialData.financialContributionsText ?? analysis.description,
+            upvoteCount: nil,
+            downvoteCount: nil,
+            timeRangeOfData: nil,
+            cycleEndYear: nil,
+            committeeName: financialData.committeeOrPACName,
+            queryType: nil,
+            debug: nil,
+            percentContributions: financialData.percentContributions,
+            contributionTotals: financialData.contributionTotals,
+            leadershipContributionsToCommittee: financialData.leadershipContributionsToCommittee
+        )
     }
 }

@@ -15,6 +15,7 @@ class CompassAIHeaderView: UIView {
     private let centerContentView = UIView()
     private let slashLineView = UIView()
     private let titleLabel = UILabel()
+    private let infoButton = UIButton(type: .system)
     private let separatorLine = UIView()
     
     // MARK: - Properties
@@ -45,7 +46,7 @@ class CompassAIHeaderView: UIView {
         backButton.translatesAutoresizingMaskIntoConstraints = false
         backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
         
-        // Configure center content view to hold logo and title
+        // Configure center content view to hold the centered title.
         centerContentView.translatesAutoresizingMaskIntoConstraints = false
         
         // TODO: Replace the slash line with a compass logo.
@@ -55,10 +56,19 @@ class CompassAIHeaderView: UIView {
 //        slashLineView.transform = CGAffineTransform(rotationAngle: CGFloat.pi / 6) // 30 degree rotation
         
         // Configure title label
-        titleLabel.text = "Compass AI"
+        titleLabel.text = AppConfiguration.displayName
         titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .medium)
         titleLabel.textColor = .black
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        let infoImage = UIImage(systemName: "info.circle")?
+            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 18, weight: .regular))
+        infoButton.setImage(infoImage, for: .normal)
+        infoButton.tintColor = .systemGray
+        infoButton.translatesAutoresizingMaskIntoConstraints = false
+        infoButton.isHidden = true
+        infoButton.accessibilityLabel = "About \(AppConfiguration.displayName)"
+        infoButton.addTarget(self, action: #selector(infoButtonTapped), for: .touchUpInside)
         
         // Configure separator line at bottom
         separatorLine.backgroundColor = UIColor.systemGray4
@@ -69,6 +79,7 @@ class CompassAIHeaderView: UIView {
         addSubview(centerContentView)
 //        centerContentView.addSubview(slashLineView)
         centerContentView.addSubview(titleLabel)
+        addSubview(infoButton)
         addSubview(separatorLine)
     }
     
@@ -83,21 +94,19 @@ class CompassAIHeaderView: UIView {
             // Center content view - contains logo and title
             centerContentView.centerXAnchor.constraint(equalTo: centerXAnchor),
             centerContentView.centerYAnchor.constraint(equalTo: backButton.centerYAnchor),
-            
-            // Slash line - positioned within center content
-//            slashLineView.leadingAnchor.constraint(equalTo: centerContentView.leadingAnchor),
-//            slashLineView.centerYAnchor.constraint(equalTo: centerContentView.centerYAnchor),
-//            slashLineView.widthAnchor.constraint(equalToConstant: 3),
-//            slashLineView.heightAnchor.constraint(equalToConstant: 24),
-            
-            // Title label - positioned next to slash line
-//            titleLabel.leadingAnchor.constraint(equalTo: slashLineView.trailingAnchor, constant: 12),
-//            titleLabel.leadingAnchor.constraint(equalTo: centerContentView.leadingAnchor, constant: 12),
+            centerContentView.leadingAnchor.constraint(greaterThanOrEqualTo: backButton.trailingAnchor, constant: 12),
+            centerContentView.trailingAnchor.constraint(lessThanOrEqualTo: infoButton.leadingAnchor, constant: -12),
+
             titleLabel.leadingAnchor.constraint(equalTo: centerContentView.leadingAnchor),
             titleLabel.centerYAnchor.constraint(equalTo: centerContentView.centerYAnchor),
             titleLabel.trailingAnchor.constraint(equalTo: centerContentView.trailingAnchor),
             titleLabel.topAnchor.constraint(equalTo: centerContentView.topAnchor),
             titleLabel.bottomAnchor.constraint(equalTo: centerContentView.bottomAnchor),
+
+            infoButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
+            infoButton.centerYAnchor.constraint(equalTo: backButton.centerYAnchor),
+            infoButton.widthAnchor.constraint(equalToConstant: 28),
+            infoButton.heightAnchor.constraint(equalToConstant: 28),
             
             // Separator line at the bottom
             separatorLine.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -108,9 +117,10 @@ class CompassAIHeaderView: UIView {
     }
     
     // MARK: - Public Configuration Methods
-    func configure(title: String = "Compass AI", showBackButton: Bool = true) {
+    func configure(title: String = AppConfiguration.displayName, showBackButton: Bool = true, showInfoButton: Bool = false) {
         titleLabel.text = title
         backButton.isHidden = !showBackButton
+        infoButton.isHidden = !showInfoButton
     }
     
     func setTitleColor(_ color: UIColor) {
@@ -129,6 +139,10 @@ class CompassAIHeaderView: UIView {
     @objc private func backButtonTapped() {
         delegate?.headerViewBackButtonTapped(self)
     }
+
+    @objc private func infoButtonTapped() {
+        delegate?.headerViewInfoButtonTapped(self)
+    }
     
     // MARK: - Intrinsic Content Size
     override var intrinsicContentSize: CGSize {
@@ -139,6 +153,12 @@ class CompassAIHeaderView: UIView {
 // MARK: - Delegate Protocol
 protocol CompassAIHeaderViewDelegate: AnyObject {
     func headerViewBackButtonTapped(_ headerView: CompassAIHeaderView)
+    func headerViewInfoButtonTapped(_ headerView: CompassAIHeaderView)
+}
+
+extension CompassAIHeaderViewDelegate {
+    func headerViewBackButtonTapped(_ headerView: CompassAIHeaderView) {}
+    func headerViewInfoButtonTapped(_ headerView: CompassAIHeaderView) {}
 }
 
 // MARK: - UIViewController Extension
@@ -146,14 +166,14 @@ extension UIViewController {
     
     /// Adds a Compass AI header to the view controller that extends to the top of the screen
     /// - Parameters:
-    ///   - title: The title to display (defaults to "Compass AI")
+    ///   - title: The title to display (defaults to the configured app display name)
     ///   - showBackButton: Whether to show the back button (defaults to true)
     /// - Returns: The configured header view
     @discardableResult
-    func addCompassAIHeader(title: String = "Compass AI", showBackButton: Bool = true) -> CompassAIHeaderView {
+    func addCompassAIHeader(title: String = AppConfiguration.displayName, showBackButton: Bool = true, showInfoButton: Bool = false) -> CompassAIHeaderView {
         
         let headerView = CompassAIHeaderView()
-        headerView.configure(title: title, showBackButton: showBackButton)
+        headerView.configure(title: title, showBackButton: showBackButton, showInfoButton: showInfoButton)
         headerView.translatesAutoresizingMaskIntoConstraints = false
         
         // Add a background view that extends to the very top to prevent any gray showing through

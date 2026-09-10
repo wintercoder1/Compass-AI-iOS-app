@@ -26,10 +26,27 @@ class CategorySelectorView: UIView {
     // MARK: - Properties
     weak var delegate: CategorySelectorViewDelegate?
     private var isDropdownVisible = false
-    private let categories = CurrentSearchCategory.allCases
+    private let categorySections: [CategorySection] = [
+        CategorySection(
+            title: "Important Analyses",
+            categories: [.financialContributions, .leadershipDemographics]
+        ),
+        CategorySection(
+            title: "For Fun Analyses",
+            categories: [
+                .politicalLeaning,
+                .deiFriendliness,
+                .wokeness,
+                .environmentalImpact,
+                .immigrationSupport,
+                .technologyInnovation
+            ]
+        )
+    ]
     private var dropdownHeightConstraint: NSLayoutConstraint!
     private let rowHeight: CGFloat = 48
-    private let maxVisibleRows: CGFloat = 5
+    private let sectionHeaderHeight: CGFloat = 34
+    private let maxDropdownHeight: CGFloat = 420
     
     // MARK: - Initialization
     override init(frame: CGRect) {
@@ -120,9 +137,15 @@ class CategorySelectorView: UIView {
         dropdownTableView.register(CategoryDropdownCell.self, forCellReuseIdentifier: "CategoryDropdownCell")
         dropdownTableView.isScrollEnabled = true
         dropdownTableView.showsVerticalScrollIndicator = true
+        dropdownTableView.sectionHeaderTopPadding = 0
         dropdownContainer.addSubview(dropdownTableView)
 
-        let dropdownHeight = min(CGFloat(categories.count) * rowHeight, maxVisibleRows * rowHeight)
+        let rowCount = categorySections.reduce(0) { $0 + $1.categories.count }
+        let headerCount = categorySections.count
+        let dropdownHeight = min(
+            CGFloat(rowCount) * rowHeight + CGFloat(headerCount) * sectionHeaderHeight,
+            maxDropdownHeight
+        )
         dropdownHeightConstraint = dropdownContainer.heightAnchor.constraint(equalToConstant: dropdownHeight)
         
         NSLayoutConstraint.activate([
@@ -168,8 +191,8 @@ class CategorySelectorView: UIView {
         }
         
         // Scroll to selected category
-        if let selectedIndex = categories.firstIndex(of: CurrentConfiguration.shared.currentCategory) {
-            dropdownTableView.scrollToRow(at: IndexPath(row: selectedIndex, section: 0), at: .middle, animated: false)
+        if let selectedIndexPath = indexPath(for: CurrentConfiguration.shared.currentCategory) {
+            dropdownTableView.scrollToRow(at: selectedIndexPath, at: .middle, animated: false)
         }
         
         // Dismiss other dropdowns. This only needs to go one way. This cannot be tapped if the other one is open.
@@ -231,21 +254,62 @@ class CategorySelectorView: UIView {
         }
         return containerButton.frame.contains(point)
     }
+
+    private func category(for indexPath: IndexPath) -> CurrentSearchCategory {
+        return categorySections[indexPath.section].categories[indexPath.row]
+    }
+
+    private func indexPath(for category: CurrentSearchCategory) -> IndexPath? {
+        for sectionIndex in categorySections.indices {
+            if let rowIndex = categorySections[sectionIndex].categories.firstIndex(of: category) {
+                return IndexPath(row: rowIndex, section: sectionIndex)
+            }
+        }
+        return nil
+    }
 }
 
 // MARK: - UITableViewDataSource & UITableViewDelegate
 extension CategorySelectorView: UITableViewDataSource, UITableViewDelegate {
+
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return categorySections.count
+    }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categories.count - 1 // The minus one is to keep out the 'undefined' category
+        return categorySections[section].categories.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryDropdownCell", for: indexPath) as! CategoryDropdownCell
-        let category = categories[indexPath.row]
+        let category = category(for: indexPath)
         let isSelected = category == CurrentConfiguration.shared.currentCategory
         cell.configure(with: category, isSelected: isSelected)
         return cell
+    }
+
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let containerView = UIView()
+        containerView.backgroundColor = UIColor.systemGray6
+
+        let label = UILabel()
+        label.text = categorySections[section].title
+        label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
+        label.textColor = .secondaryLabel
+        label.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(label)
+
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 14),
+            label.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -14),
+            label.centerYAnchor.constraint(equalTo: containerView.centerYAnchor)
+        ])
+
+        return containerView
+    }
+
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return sectionHeaderHeight
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -254,12 +318,17 @@ extension CategorySelectorView: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        let selectedCategory = categories[indexPath.row]
+        let selectedCategory = category(for: indexPath)
         CurrentConfiguration.shared.setCategory(selectedCategory)
         updateCategoryDisplay()
         hideDropdown()
         delegate?.categorySelectorDidSelectCategory(selectedCategory)
     }
+}
+
+private struct CategorySection {
+    let title: String
+    let categories: [CurrentSearchCategory]
 }
 
 // MARK: - Category Dropdown Cell

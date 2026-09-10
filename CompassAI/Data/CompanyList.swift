@@ -5852,19 +5852,46 @@ let usNASDAQTop100WithoutIncOrCompanySufffix = [
 // const wellKnownPrivateOrgs = []
 
 let miscOrgs = [
-    "Meta Platforms", "Facebook", "Instagram", "YouTube", "LinkedIn",
-    "Uber", "Airbnb", "Spotify", "Nike", "Adidas", "Coca-Cola", "McDonald\'s",
-    "Walmart", "Target", "Home Depot", "Best Buy", "GameStop", "AMC", "Disney", "Warner Bros",
-    "EA Sports", "Activision", "Blizzard", "Ford", "General Motors", "JPMorgan Chase",
+    "Meta Platforms",
+    "Uber", "Airbnb", "Nike", "Coca-Cola", "McDonald's",
+    "Walmart", "Target", "Home Depot", "Best Buy", "GameStop", "AMC", "Disney",
+    "Ford", "General Motors", "JPMorgan Chase",
     "Bank of America", "Wells Fargo", "Goldman Sachs", "Visa", "Mastercard",
-    "PayPal", "Square", "Robinhood", "Coinbase", "Binance"]
+    "PayPal", "Robinhood", "Coinbase"]
 
-// These ones could potential need a different source than fec.gov for finanical contributions.
-let miscOrgsInternational = ["Sony", "Nintendo", "Toyota", "Honda", "BMW", "Mercedes-Benz", "Audi"]
+let excludedOrganizationSuggestions: Set<String> = [
+    // Non-US companies that the current backend has difficulty resolving consistently.
+    "Adidas",
+    "Arm Holdings",
+    "ASML Holding",
+    "AstraZeneca",
+    "Atlassian",
+    "Coca-Cola Europacific Partners",
+    "GlobalFoundries",
+    "Linde",
+    "Lululemon Athletica",
+    "MercadoLibre",
+    "NXP Semiconductors",
+    "PDD Holdings",
+    "Shopify",
+    "Spotify",
 
+    // Subsidiaries, product brands, or duplicate class listings where the parent is a better query target.
+    "Activision",
+    "Alphabet Class A",
+    "Alphabet Class C",
+    "Blizzard",
+    "EA Sports",
+    "Facebook",
+    "Instagram",
+    "LinkedIn",
+    "Square",
+    "Warner Bros",
+    "YouTube"
+]
 
+let organizationSuggestions = (miscOrgs + usNASDAQTop100WithoutIncOrCompanySufffix).filter {
+    !excludedOrganizationSuggestions.contains($0)
+}
 
-let organizationSuggestions = miscOrgs + miscOrgsInternational + usNASDAQTop100WithoutIncOrCompanySufffix
-
-//let organizationSuggestions = miscOrgs + miscOrgsInternational + completeNASDAQCompanyList
-
+//let organizationSuggestions = miscOrgs + completeNASDAQCompanyList

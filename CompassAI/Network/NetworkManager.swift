@@ -161,6 +161,19 @@ class NetworkManager {
         )
     }
     
+    // MARK: - Leadership Demographics
+    func getLeadershipDemographics(
+        for topic: String,
+        completion: @escaping (Result<LeadershipDemographicsResponse, NetworkError>) -> Void
+    ) {
+        let encodedTopic = topic.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        makeRequest(
+            endpoint: "/getLeadership/\(encodedTopic)",
+            responseType: LeadershipDemographicsResponse.self,
+            completion: completion
+        )
+    }
+    
     // MARK: - Generic Category Analysis
     /// Fetches analysis for any category type
     /// - Parameters:
@@ -243,6 +256,29 @@ class NetworkManager {
                         hasFinancialContributions: true,
                         financialContributionsText: response.fecFinancialContributionsSummaryText,
                         financialContributionsOverviewAnalysis: financialAnalysis,
+                        category: category
+                    )
+                    completion(.success(analysis))
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            }
+            
+        case .leadershipDemographics:
+            getLeadershipDemographics(for: topic) { result in
+                switch result {
+                case .success(let response):
+                    let demographicsAnalysis = response.analysis
+                    let displayTopic = response.resolvedCompany ?? response.topic
+                    let analysis = OrganizationAnalysis(
+                        topic: displayTopic,
+                        lean: "Leadership Demographics",
+                        rating: 0,
+                        description: demographicsAnalysis?.caveat ?? response.reason ?? "Leadership demographics data is available.",
+                        hasFinancialContributions: false,
+                        financialContributionsText: nil,
+                        financialContributionsOverviewAnalysis: nil,
+                        leadershipDemographicsAnalysis: demographicsAnalysis,
                         category: category
                     )
                     completion(.success(analysis))

@@ -90,7 +90,7 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
         navigationController?.setNavigationBarHidden(true, animated: false)
         
         // Add the custom header using the extension
-        headerView = addCompassAIHeader(title: "Compass AI")
+        headerView = addCompassAIHeader()
         headerView.delegate = self
         
         // Configure scroll view
@@ -183,7 +183,7 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
         bottomPaddingView.backgroundColor = .white
  
         let copyrightLabel = UILabel()
-        copyrightLabel.text = "  © 2025 Correlation Apps LLC. All rights reserved.  "
+        copyrightLabel.text = "  © 2026 \(AppConfiguration.companyName). All rights reserved.  "
         copyrightLabel.font = UIFont.systemFont(ofSize: 14)
         copyrightLabel.textColor = .systemGray
         copyrightLabel.textAlignment = .center
@@ -196,7 +196,7 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
         dataSourceLabel.numberOfLines = 0
         
         let disclaimerLabel = UILabel()
-        disclaimerLabel.text = "  This website provides information derived from publicly available data. Compass AI and Correlation Apps LLC do not endorse any political candidates or organizations mentioned.  "
+        disclaimerLabel.text = "  This website provides information derived from publicly available data. \(AppConfiguration.displayName) and \(AppConfiguration.companyName) do not endorse any political candidates or organizations mentioned.  "
         disclaimerLabel.font = UIFont.systemFont(ofSize: 12)
         disclaimerLabel.textColor = .systemGray
         disclaimerLabel.textAlignment = .center
@@ -301,6 +301,11 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
         overviewLabel.textColor = .black
         overviewLabel.numberOfLines = 0
         
+        if analysis.category == .leadershipDemographics {
+            configureLeadershipDemographicsContent(stackView: stackView, overviewLabel: overviewLabel, analysis: analysis)
+            return
+        }
+        
         // Lean and rating section
         let leanRatingView = UIView()
         
@@ -387,6 +392,131 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
             stackView.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -30),
             stackView.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -55)
         ])
+    }
+    
+    private func configureLeadershipDemographicsContent(
+        stackView: UIStackView,
+        overviewLabel: UILabel,
+        analysis: OrganizationAnalysis
+    ) {
+        stackView.addArrangedSubview(overviewLabel)
+        
+        guard let demographics = analysis.leadershipDemographicsAnalysis,
+              !demographics.segments.isEmpty else {
+            let emptyLabel = UILabel()
+            emptyLabel.text = analysis.description
+            emptyLabel.font = UIFont.systemFont(ofSize: 16)
+            emptyLabel.textColor = .black
+            emptyLabel.numberOfLines = 0
+            stackView.addArrangedSubview(emptyLabel)
+            attachOverviewStackView(stackView)
+            return
+        }
+        
+        let subtitleLabel = UILabel()
+        if let ticker = demographics.ticker, !ticker.isEmpty {
+            subtitleLabel.text = "\(demographics.resolvedCompany ?? organizationName) · \(ticker)"
+        } else {
+            subtitleLabel.text = demographics.resolvedCompany ?? organizationName
+        }
+        subtitleLabel.font = UIFont.systemFont(ofSize: 17, weight: .medium)
+        subtitleLabel.textColor = .systemGray
+        subtitleLabel.numberOfLines = 0
+        stackView.addArrangedSubview(subtitleLabel)
+        
+        let chartView = LeadershipDemographicsPieChartView()
+        chartView.translatesAutoresizingMaskIntoConstraints = false
+        chartView.configure(with: demographics.segments)
+        stackView.addArrangedSubview(chartView)
+        
+        let legendStackView = UIStackView()
+        legendStackView.axis = .vertical
+        legendStackView.spacing = 12
+        legendStackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        for segment in demographics.segments {
+            legendStackView.addArrangedSubview(createLeadershipLegendRow(for: segment))
+        }
+        stackView.addArrangedSubview(legendStackView)
+        
+        let sampleLabel = UILabel()
+        sampleLabel.text = demographics.matchedSummary
+        sampleLabel.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        sampleLabel.textColor = .systemGray
+        sampleLabel.numberOfLines = 0
+        stackView.addArrangedSubview(sampleLabel)
+        
+        if let caveat = demographics.caveat, !caveat.isEmpty {
+            let caveatLabel = UILabel()
+            caveatLabel.text = caveat
+            caveatLabel.font = UIFont.systemFont(ofSize: 13)
+            caveatLabel.textColor = .systemGray2
+            caveatLabel.numberOfLines = 0
+            stackView.addArrangedSubview(caveatLabel)
+        }
+        
+        if let sourceDetail = demographics.sourceDetail, !sourceDetail.isEmpty {
+            let sourceLabel = UILabel()
+            sourceLabel.text = sourceDetail
+            sourceLabel.font = UIFont.systemFont(ofSize: 13)
+            sourceLabel.textColor = .systemGray2
+            sourceLabel.numberOfLines = 0
+            stackView.addArrangedSubview(sourceLabel)
+        }
+        
+        attachOverviewStackView(stackView)
+        
+        NSLayoutConstraint.activate([
+            chartView.heightAnchor.constraint(equalToConstant: 260)
+        ])
+    }
+    
+    private func attachOverviewStackView(_ stackView: UIStackView) {
+        cardView.addSubview(stackView)
+        
+        NSLayoutConstraint.activate([
+            stackView.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 30),
+            stackView.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 24),
+            stackView.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -24),
+            stackView.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -55)
+        ])
+    }
+    
+    private func createLeadershipLegendRow(for segment: LeadershipDemographicsSegment) -> UIView {
+        let rowStackView = UIStackView()
+        rowStackView.axis = .horizontal
+        rowStackView.alignment = .center
+        rowStackView.spacing = 10
+        
+        let colorDot = UIView()
+        colorDot.backgroundColor = LeadershipDemographicsPieChartView.color(for: segment.group)
+        colorDot.layer.cornerRadius = 6
+        colorDot.translatesAutoresizingMaskIntoConstraints = false
+        
+        let groupLabel = UILabel()
+        groupLabel.text = segment.group
+        groupLabel.font = UIFont.systemFont(ofSize: 16)
+        groupLabel.textColor = .black
+        groupLabel.numberOfLines = 0
+        
+        let percentageLabel = UILabel()
+        percentageLabel.text = "\(segment.percentage)%"
+        percentageLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        percentageLabel.textColor = .black
+        percentageLabel.textAlignment = .right
+        percentageLabel.setContentHuggingPriority(.required, for: .horizontal)
+        percentageLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        
+        rowStackView.addArrangedSubview(colorDot)
+        rowStackView.addArrangedSubview(groupLabel)
+        rowStackView.addArrangedSubview(percentageLabel)
+        
+        NSLayoutConstraint.activate([
+            colorDot.widthAnchor.constraint(equalToConstant: 12),
+            colorDot.heightAnchor.constraint(equalToConstant: 12)
+        ])
+        
+        return rowStackView
     }
     
 //    @objc private func financialContributionsButtonTapped() {
@@ -487,13 +617,14 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
     }
     
     private func checkIfAlreadySaved() {
-        guard !organizationName.isEmpty else { return }
+        guard !organizationName.isEmpty,
+              let category = analysis?.category else { return }
         
         let persistence = CoreDataPersistence()
         let context = persistence.container.viewContext
         
         let request: NSFetchRequest<QueryAnswerObject> = QueryAnswerObject.fetchRequest()
-        request.predicate = NSPredicate(format: "topic == %@", organizationName)
+        request.predicate = NSPredicate(format: "topic == %@ AND category == %@", organizationName, category.rawValue)
         request.fetchLimit = 1
         
         do {
@@ -519,6 +650,7 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
             CoreDataHelper.removePersistedQueryAnswer(
                 context: context,
                 organizationName: self.organizationName,
+                category: analysis.category,
                 completion: { wasSaved in
                     self.isSaved = !wasSaved
                 }
@@ -560,8 +692,9 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
         //TODO: Put in correct adUnitID !!!
         //
         //
-        bannerView.adUnitID = "ca-app-pub-3940256099942544/2934735716"
-        //bannerView.adUnitID = "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX" // Add your ad unit ID
+        bannerView.adUnitID = AdMobConfiguration.shared.getOverviewBannerAdUnitID()
+        // bannerView.adUnitID = "ca-app-pub-3940256099942544/2934735716"
+        // bannerView.adUnitID = "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX" // Add your ad unit ID
         //
         //  ^^^^^^^^^^ this won't work if this is not correctly set!!
         //
@@ -583,6 +716,108 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
         setupBannerAdContent()
     }
     
+}
+
+// MARK: - Leadership Demographics Pie Chart
+private final class LeadershipDemographicsPieChartView: UIView {
+    private var segments: [LeadershipDemographicsSegment] = []
+    private var segmentLayers: [CAShapeLayer] = []
+    private var percentageLabels: [UILabel] = []
+    
+    func configure(with segments: [LeadershipDemographicsSegment]) {
+        self.segments = segments.filter { $0.percentage > 0 }
+        setNeedsLayout()
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        renderChart()
+    }
+    
+    private func renderChart() {
+        segmentLayers.forEach { $0.removeFromSuperlayer() }
+        percentageLabels.forEach { $0.removeFromSuperview() }
+        segmentLayers.removeAll()
+        percentageLabels.removeAll()
+        
+        guard !segments.isEmpty else { return }
+        
+        let diameter = min(bounds.width, bounds.height)
+        let radius = diameter / 2
+        let center = CGPoint(x: bounds.midX, y: bounds.midY)
+        var startAngle = -CGFloat.pi / 2
+        
+        for segment in segments {
+            let sliceAngle = CGFloat(segment.percentage) / 100.0 * 2.0 * CGFloat.pi
+            let endAngle = startAngle + sliceAngle
+            
+            let path = UIBezierPath()
+            path.move(to: center)
+            path.addArc(withCenter: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: true)
+            path.close()
+            
+            let shapeLayer = CAShapeLayer()
+            shapeLayer.path = path.cgPath
+            shapeLayer.fillColor = Self.color(for: segment.group).cgColor
+            shapeLayer.strokeColor = UIColor.white.cgColor
+            shapeLayer.lineWidth = 2
+            layer.addSublayer(shapeLayer)
+            segmentLayers.append(shapeLayer)
+            
+            if segment.percentage >= 5 {
+                addPercentageLabel(for: segment, startAngle: startAngle, endAngle: endAngle, center: center, radius: radius)
+            }
+            
+            startAngle = endAngle
+        }
+    }
+    
+    private func addPercentageLabel(
+        for segment: LeadershipDemographicsSegment,
+        startAngle: CGFloat,
+        endAngle: CGFloat,
+        center: CGPoint,
+        radius: CGFloat
+    ) {
+        let label = UILabel()
+        label.text = "\(segment.percentage)%"
+        label.font = UIFont.systemFont(ofSize: 18, weight: .bold)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.sizeToFit()
+        
+        let midAngle = (startAngle + endAngle) / 2.0
+        let labelRadius = radius * 0.62
+        let labelSize = CGSize(width: max(label.bounds.width + 14, 44), height: 26)
+        label.frame = CGRect(
+            x: center.x + cos(midAngle) * labelRadius - labelSize.width / 2,
+            y: center.y + sin(midAngle) * labelRadius - labelSize.height / 2,
+            width: labelSize.width,
+            height: labelSize.height
+        )
+        
+        addSubview(label)
+        percentageLabels.append(label)
+    }
+    
+    static func color(for group: String) -> UIColor {
+        switch group {
+        case "White":
+            return UIColor.systemBlue
+        case "Black or African American":
+            return UIColor.systemOrange
+        case "Hispanic or Latino":
+            return UIColor.systemPink
+        case "Asian or Pacific Islander", "East Asian or Pacific Islander":
+            return UIColor.systemGreen
+        case "Two or more races":
+            return UIColor.systemPurple
+        case "American Indian or Alaska Native":
+            return UIColor.systemTeal
+        default:
+            return UIColor.systemGray
+        }
+    }
 }
 
 // MARK: - CompassAIHeaderViewDelegate

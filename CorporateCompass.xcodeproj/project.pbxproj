@@ -213,7 +213,7 @@
 					};
 				};
 			};
-			buildConfigurationList = AAFDD2B52E57B7F90005D5DA /* Build configuration list for PBXProject "CompassAI" */;
+			buildConfigurationList = AAFDD2B52E57B7F90005D5DA /* Build configuration list for PBXProject "CorporateCompass" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -311,7 +311,7 @@
 				DEVELOPMENT_TEAM = EPDF3ATTJ8;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CompassAI/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Compass AI";
+				INFOPLIST_KEY_CFBundleDisplayName = CorpCompass;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -323,7 +323,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.correlation-apps.compass-ai";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -347,7 +347,7 @@
 				DEVELOPMENT_TEAM = EPDF3ATTJ8;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CompassAI/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Compass AI";
+				INFOPLIST_KEY_CFBundleDisplayName = CorpCompass;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -359,7 +359,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.correlation-apps.compass-ai";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -561,7 +561,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		AAFDD2B52E57B7F90005D5DA /* Build configuration list for PBXProject "CompassAI" */ = {
+		AAFDD2B52E57B7F90005D5DA /* Build configuration list for PBXProject "CorporateCompass" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AAFDD2E62E57B7FB0005D5DA /* Debug */,

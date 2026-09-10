@@ -12,14 +12,21 @@ class CoreDataHelper {
         
         context.perform {
             
-            let qa = QueryAnswerObject(context: context)
+            let topic = organizationName ?? analysis.topic
+            let category = analysis.category.rawValue
+            let request: NSFetchRequest<QueryAnswerObject> = QueryAnswerObject.fetchRequest()
+            request.predicate = NSPredicate(format: "topic == %@ AND category == %@", topic, category)
+            request.fetchLimit = 1
+            
+            let qa = (try? context.fetch(request).first) ?? QueryAnswerObject(context: context)
             qa.date_persisted = Date()
-            qa.topic = organizationName ?? analysis.topic
-            qa.category = analysis.category.rawValue // Important.
+            qa.topic = topic
+            qa.category = category // Important.
             qa.lean = analysis.lean
             qa.rating = Int16(analysis.rating)
-            qa.context = analysis.description
+            qa.context = persistedContext(for: analysis)
             qa.created_with_financial_contributions_info = analysis.hasFinancialContributions
+            qa.finanicial_contributions_overview = makeFinancialContributionsOverview(from: analysis, context: context)
             
             do {
                 try context.save()
@@ -29,17 +36,18 @@ class CoreDataHelper {
                     overviewPageCompletion(isSaved)
 
                     // Fetch financial contributions in the background if needed
-                    if qa.created_with_financial_contributions_info {
+                    if qa.created_with_financial_contributions_info && qa.finanicial_contributions_overview == nil {
                         let topic = qa.topic ?? ""
                         
                         // Dispatch to background queue to avoid blocking
                         DispatchQueue.global(qos: .utility).async {
+                            let category = qa.category ?? analysis.category.rawValue
                             NetworkManager.shared.getFinancialContributionsOverview(for: topic) { result in
                                 switch result {
                                 case .success(let financialData):
                                     // Save financial contributions on a background context
                                     print("Will now fetch financial contributions")
-                                    self.saveFinancialContributions(financialData: financialData, for: topic, parentContext: context)
+                                    self.saveFinancialContributions(financialData: financialData, for: topic, category: category, parentContext: context)
                                     
                                 case .failure(let error):
                                     print("Failed to fetch financial contributions: \(error)")
@@ -61,7 +69,7 @@ class CoreDataHelper {
         }
     }
     
-    private class func saveFinancialContributions(financialData: FinancialContributionsResponse, for topic: String, parentContext: NSManagedObjectContext) {
+    private class func saveFinancialContributions(financialData: FinancialContributionsResponse, for topic: String, category: String, parentContext: NSManagedObjectContext) {
         // Create a background context for saving financial data
         let backgroundContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         backgroundContext.parent = parentContext
@@ -69,7 +77,7 @@ class CoreDataHelper {
         backgroundContext.perform {
             // Fetch the QueryAnswerObject to attach financial data
             let request: NSFetchRequest<QueryAnswerObject> = QueryAnswerObject.fetchRequest()
-            request.predicate = NSPredicate(format: "topic == %@", topic)
+            request.predicate = NSPredicate(format: "topic == %@ AND category == %@", topic, category)
             request.fetchLimit = 1
             
             do {
@@ -190,17 +198,90 @@ class CoreDataHelper {
                     }
                      
                 } else {
-                    print("No QueryAnswerObject found for topic: \(topic)")
+                    print("No QueryAnswerObject found for topic/category: \(topic) / \(category)")
                 }
             } catch {
                 print("Failed to save financial contributions: \(error)")
             }
         }
     }
+    
+    private class func persistedContext(for analysis: OrganizationAnalysis) -> String {
+        guard analysis.category == .leadershipDemographics,
+              let leadershipDemographicsAnalysis = analysis.leadershipDemographicsAnalysis,
+              let jsonData = try? JSONEncoder().encode(leadershipDemographicsAnalysis),
+              let jsonString = String(data: jsonData, encoding: .utf8) else {
+            return analysis.description
+        }
         
-    class func removePersistedQueryAnswer(context: NSManagedObjectContext, organizationName: String, completion: ((Bool) -> Void)) {
+        return jsonString
+    }
+    
+    private class func makeFinancialContributionsOverview(from analysis: OrganizationAnalysis, context: NSManagedObjectContext) -> FinancialContributionsOverview? {
+        guard analysis.category == .financialContributions,
+              let financialData = analysis.financialContributionsOverviewAnalysis else {
+            return nil
+        }
+        
+        let financialContributions = FinancialContributionsOverview(context: context)
+        financialContributions.topic = analysis.topic
+        financialContributions.normalized_topic_name = analysis.topic
+        financialContributions.timestamp = nil
+        financialContributions.committee_id = financialData.committeeOrPACID
+        financialContributions.committee_name = financialData.committeeOrPACName
+        financialContributions.fec_financial_contributions_summary_text = financialData.financialContributionsText
+        
+        if let percentContributions = financialData.percentContributions {
+            let percentContributionsManagedObject = FinancialContribution_PercentContributions(context: context)
+            percentContributionsManagedObject.total_to_democrats = Int64(percentContributions.totalToDemocrats)
+            percentContributionsManagedObject.total_to_republicans = Int64(percentContributions.totalToRepublicans)
+            percentContributionsManagedObject.total_contributions = Int64(percentContributions.totalContributions)
+            percentContributionsManagedObject.percent_to_democrats = percentContributions.percentToDemocrats
+            percentContributionsManagedObject.percent_to_republicans = percentContributions.percentToRepublicans
+            financialContributions.percent_contributions = percentContributionsManagedObject
+        }
+        
+        if let contributionTotals = financialData.contributionTotals {
+            let contributionTotalsList = NSMutableSet()
+            for contributionTotal in contributionTotals {
+                let contributionTotalObject = FinancialContribution_ContributionTotals_ListItem(context: context)
+                contributionTotalObject.number_of_contributions = Int32(contributionTotal.numberOfContributions ?? 0)
+                contributionTotalObject.recipient_id = contributionTotal.recipientID
+                contributionTotalObject.recipient_name = contributionTotal.recipientName
+                contributionTotalObject.total_contribution_amount = Int32(contributionTotal.totalContributionAmount ?? 0)
+                contributionTotalsList.add(contributionTotalObject)
+            }
+            financialContributions.contributions_totals_list = contributionTotalsList
+        }
+        
+        if let leadershipContributions = financialData.leadershipContributionsToCommittee {
+            let leadershipContributionsList = NSMutableSet()
+            for leadershipContribution in leadershipContributions {
+                let leadershipContributionObject = FinancialContribution_LeadershipContributorsToCommittee_ListItem(context: context)
+                leadershipContributionObject.employer = leadershipContribution.employer
+                leadershipContributionObject.name = leadershipContribution.name
+                leadershipContributionObject.occupation = leadershipContribution.occupation
+                leadershipContributionObject.transaction_amount = leadershipContribution.transactionAmount
+                leadershipContributionsList.add(leadershipContributionObject)
+            }
+            financialContributions.leadership_contributions_list = leadershipContributionsList
+        }
+        
+        return financialContributions
+    }
+    
+    class func decodeLeadershipDemographicsAnalysis(from persistedContext: String?) -> LeadershipDemographicsAnalysis? {
+        guard let persistedContext,
+              let jsonData = persistedContext.data(using: .utf8) else {
+            return nil
+        }
+        
+        return try? JSONDecoder().decode(LeadershipDemographicsAnalysis.self, from: jsonData)
+    }
+        
+    class func removePersistedQueryAnswer(context: NSManagedObjectContext, organizationName: String, category: CurrentSearchCategory, completion: ((Bool) -> Void)) {
         let request: NSFetchRequest<QueryAnswerObject> = QueryAnswerObject.fetchRequest()
-        request.predicate = NSPredicate(format: "topic == %@", organizationName)
+        request.predicate = NSPredicate(format: "topic == %@ AND category == %@", organizationName, category.rawValue)
         
         do {
             let results = try context.fetch(request)

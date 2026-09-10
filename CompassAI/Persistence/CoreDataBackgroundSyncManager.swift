@@ -78,7 +78,8 @@ class CoreDataFinancialContributionsSyncManager {
         var failedCount = 0
         
         for qa in queryAnswers {
-            guard let topic = qa.topic else {
+            guard let topic = qa.topic,
+                  let category = qa.category else {
                 print("⚠️ Skipping query answer with nil topic")
                 continue
             }
@@ -101,6 +102,7 @@ class CoreDataFinancialContributionsSyncManager {
                     self.saveFinancialContributions(
                         financialData: financialData,
                         for: topic,
+                        category: category,
                         context: context
                     ) { success in
                         if success {
@@ -134,12 +136,13 @@ class CoreDataFinancialContributionsSyncManager {
     private func saveFinancialContributions(
         financialData: FinancialContributionsResponse,
         for topic: String,
+        category: String,
         context: NSManagedObjectContext,
         completion: @escaping (Bool) -> Void
     ) {
         context.perform {
             let request: NSFetchRequest<QueryAnswerObject> = QueryAnswerObject.fetchRequest()
-            request.predicate = NSPredicate(format: "topic == %@", topic)
+            request.predicate = NSPredicate(format: "topic == %@ AND category == %@", topic, category)
             request.fetchLimit = 1
             
             do {

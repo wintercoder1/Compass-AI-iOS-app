@@ -33,7 +33,7 @@ class CompassAIFooterView: UIView {
     private func setupFooterContent() {
         // Copyright label
         let copyrightLabel = UILabel()
-        copyrightLabel.text = "© 2025 Correlation Apps LLC. All rights reserved."
+        copyrightLabel.text = "© 2026 \(AppConfiguration.companyName). All rights reserved."
         copyrightLabel.font = UIFont.systemFont(ofSize: 12)
         copyrightLabel.textColor = UIColor.systemGray
         copyrightLabel.textAlignment = .center
@@ -56,7 +56,7 @@ class CompassAIFooterView: UIView {
         
         // Disclaimer label
         let disclaimerLabel = UILabel()
-        disclaimerLabel.text = "This website provides information derived from publicly available data. Compass AI and Correlation Apps LLC do not endorse any political candidates or organizations mentioned."
+        disclaimerLabel.text = "This website provides information derived from publicly available data. \(AppConfiguration.displayName) and \(AppConfiguration.companyName) do not endorse any political candidates or organizations mentioned."
         disclaimerLabel.font = UIFont.systemFont(ofSize: 11)
         disclaimerLabel.textColor = UIColor.systemGray2
         disclaimerLabel.textAlignment = .center
@@ -131,7 +131,7 @@ extension UIViewController {
         
         // Create footer labels
         let copyrightLabel = UILabel()
-        copyrightLabel.text = "  © 2025 Correlation Apps LLC. All rights reserved.  "
+        copyrightLabel.text = "  © 2026 \(AppConfiguration.companyName). All rights reserved.  "
         copyrightLabel.font = UIFont.systemFont(ofSize: 14)
         copyrightLabel.textColor = .systemGray
         copyrightLabel.textAlignment = .center
@@ -144,7 +144,7 @@ extension UIViewController {
         dataSourceLabel.numberOfLines = 0
         
         let disclaimerLabel = UILabel()
-        disclaimerLabel.text = "  This website provides information derived from publicly available data. Compass AI and Correlation Apps LLC do not endorse any political candidates or organizations mentioned.  "
+        disclaimerLabel.text = "  This website provides information derived from publicly available data. \(AppConfiguration.displayName) and \(AppConfiguration.companyName) do not endorse any political candidates or organizations mentioned.  "
         disclaimerLabel.font = UIFont.systemFont(ofSize: 12)
         disclaimerLabel.textColor = .systemGray
         disclaimerLabel.textAlignment = .center
@@ -220,7 +220,7 @@ extension UIViewController {
                             above bottomAnchor: NSLayoutYAxisAnchor? = nil,
                             leadingConstant: CGFloat = 0, // Changed from 20 to 0 for full width
                             trailingConstant: CGFloat = 0, // Changed from -20 to 0 for full width
-                            topConstant: CGFloat = 100,
+                            topConstant: CGFloat = 30,
                             bottomConstant: CGFloat = -100) -> CompassAIFooterView {
             
         let footerView = CompassAIFooterView()

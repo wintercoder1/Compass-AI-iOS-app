@@ -16,6 +16,7 @@ struct OrganizationAnalysis {
     let hasFinancialContributions: Bool
     let financialContributionsText: String?
     let financialContributionsOverviewAnalysis: FinancialContributionsAnalysis?
+    let leadershipDemographicsAnalysis: LeadershipDemographicsAnalysis?
     let category: CurrentSearchCategory
     
     // MARK: - Initializers
@@ -29,6 +30,7 @@ struct OrganizationAnalysis {
         hasFinancialContributions: Bool,
         financialContributionsText: String?,
         financialContributionsOverviewAnalysis: FinancialContributionsAnalysis?,
+        leadershipDemographicsAnalysis: LeadershipDemographicsAnalysis? = nil,
         category: CurrentSearchCategory = .politicalLeaning
     ) {
         self.topic = topic
@@ -38,6 +40,7 @@ struct OrganizationAnalysis {
         self.hasFinancialContributions = hasFinancialContributions
         self.financialContributionsText = financialContributionsText
         self.financialContributionsOverviewAnalysis = financialContributionsOverviewAnalysis
+        self.leadershipDemographicsAnalysis = leadershipDemographicsAnalysis
         self.category = category
     }
     
@@ -56,8 +59,8 @@ struct OrganizationAnalysis {
     /// Returns whether this category should show the standard rating scale UI
     var shouldShowRatingScale: Bool {
         switch category {
-        case .financialContributions:
-            return false // Financial contributions use a different UI
+        case .financialContributions, .leadershipDemographics:
+            return false // These categories use different UI
         default:
             return true
         }
@@ -77,6 +80,230 @@ struct FinancialContributionsAnalysis {
     let percentContributions: PercentContributions?
     let contributionTotals: [ContributionTotal]?
     let leadershipContributionsToCommittee: [LeadershipContribution]?
+}
+
+// MARK: - Leadership Demographics Analysis
+struct LeadershipDemographicsAnalysis: Codable {
+    let resolvedCompany: String?
+    let ticker: String?
+    let companyPageURL: String?
+    let sourceURL: String?
+    let sourceDetail: String?
+    let caveat: String?
+    let method: String?
+    let peopleTotal: Int
+    let peopleEstimated: Int
+    let peopleUnmatched: Int
+    let segments: [LeadershipDemographicsSegment]
+    
+    var matchedSummary: String {
+        let unmatchedText = peopleUnmatched == 1 ? "1 without a surname match" : "\(peopleUnmatched) without a surname match"
+        return "Based on \(peopleEstimated) of \(peopleTotal) officers · \(unmatchedText)"
+    }
+}
+
+struct LeadershipDemographicsSegment: Codable {
+    let group: String
+    let expected: Double
+    let percentage: Int
+}
+
+// MARK: - Leadership Demographics Response
+struct LeadershipDemographicsResponse: Codable {
+    let topic: String
+    let normalizedTopicName: String?
+    let timestamp: String?
+    let officerCount: Int?
+    let source: String?
+    let sourceDetail: String?
+    let sourceURL: String?
+    let companyPageURL: String?
+    let demographics: LeadershipDemographicsPayload?
+    let resolvedCompany: String?
+    let ticker: String?
+    let isCompany: Bool?
+    let reason: String?
+    let cached: Bool?
+    
+    enum CodingKeys: String, CodingKey {
+        case topic
+        case normalizedTopicName = "normalized_topic_name"
+        case timestamp
+        case officerCount = "officer_count"
+        case source
+        case sourceDetail = "source_detail"
+        case sourceURL = "source_url"
+        case companyPageURL = "company_page_url"
+        case demographics
+        case resolvedCompany = "resolved_company"
+        case ticker
+        case isCompany = "is_company"
+        case reason
+        case cached
+    }
+    
+    var analysis: LeadershipDemographicsAnalysis? {
+        guard let demographics else { return nil }
+        let counts = demographics.expectedCounts
+            .filter { $0.expected > 0 }
+            .sorted { $0.expected > $1.expected }
+        let percentages = Self.roundedPercentages(for: counts.map(\.expected))
+        let segments = zip(counts, percentages).map { count, percentage in
+            LeadershipDemographicsSegment(
+                group: count.group,
+                expected: count.expected,
+                percentage: percentage
+            )
+        }
+        
+        return LeadershipDemographicsAnalysis(
+            resolvedCompany: resolvedCompany,
+            ticker: ticker,
+            companyPageURL: companyPageURL ?? demographics.companyPageURL,
+            sourceURL: demographics.sourceURL ?? sourceURL,
+            sourceDetail: sourceDetail,
+            caveat: demographics.caveat,
+            method: demographics.method,
+            peopleTotal: demographics.peopleTotal,
+            peopleEstimated: demographics.peopleEstimated,
+            peopleUnmatched: demographics.peopleUnmatched,
+            segments: segments
+        )
+    }
+    
+    private static func roundedPercentages(for values: [Double]) -> [Int] {
+        let total = values.reduce(0, +)
+        guard total > 0 else { return values.map { _ in 0 } }
+        
+        let rawPercentages = values.map { ($0 / total) * 100.0 }
+        var rounded = rawPercentages.map { Int($0.rounded(.down)) }
+        let remaining = 100 - rounded.reduce(0, +)
+        
+        let remainderIndexes = rawPercentages
+            .enumerated()
+            .sorted { lhs, rhs in
+                let lhsRemainder = lhs.element - Double(Int(lhs.element))
+                let rhsRemainder = rhs.element - Double(Int(rhs.element))
+                return lhsRemainder > rhsRemainder
+            }
+            .map(\.offset)
+        
+        for index in remainderIndexes.prefix(max(remaining, 0)) {
+            rounded[index] += 1
+        }
+        
+        return rounded
+    }
+}
+
+struct LeadershipDemographicsPayload: Codable {
+    let caveat: String?
+    let method: String?
+    let sourceURL: String?
+    let companyPageURL: String?
+    let isEstimate: Bool?
+    let peopleTotal: Int
+    let expectedCounts: [LeadershipExpectedCount]
+    let peopleEstimated: Int
+    let peopleUnmatched: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case caveat
+        case method
+        case sourceURL = "source_url"
+        case companyPageURL = "company_page_url"
+        case isEstimate = "is_estimate"
+        case peopleTotal = "people_total"
+        case expectedCounts = "expected_counts"
+        case peopleEstimated = "people_estimated"
+        case peopleUnmatched = "people_unmatched"
+        case estimatedEthnicity = "estimated_ethnicity"
+        case teamSize = "team_size"
+        case coverage
+    }
+    
+    enum EstimatedEthnicityKeys: String, CodingKey {
+        case caveat
+        case method
+        case sourceURL = "source_url"
+        case isEstimate = "is_estimate"
+        case groups
+    }
+    
+    enum CoverageKeys: String, CodingKey {
+        case noData = "no_data"
+        case estimated
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        companyPageURL = try container.decodeIfPresent(String.self, forKey: .companyPageURL)
+        
+        if let estimatedEthnicity = try? container.nestedContainer(keyedBy: EstimatedEthnicityKeys.self, forKey: .estimatedEthnicity) {
+            caveat = try estimatedEthnicity.decodeIfPresent(String.self, forKey: .caveat)
+            method = try estimatedEthnicity.decodeIfPresent(String.self, forKey: .method)
+            sourceURL = try estimatedEthnicity.decodeIfPresent(String.self, forKey: .sourceURL)
+            isEstimate = try estimatedEthnicity.decodeIfPresent(Bool.self, forKey: .isEstimate)
+            expectedCounts = try estimatedEthnicity.decodeIfPresent([LeadershipExpectedCount].self, forKey: .groups) ?? []
+        } else {
+            caveat = try container.decodeIfPresent(String.self, forKey: .caveat)
+            method = try container.decodeIfPresent(String.self, forKey: .method)
+            sourceURL = try container.decodeIfPresent(String.self, forKey: .sourceURL)
+            isEstimate = try container.decodeIfPresent(Bool.self, forKey: .isEstimate)
+            expectedCounts = try container.decodeIfPresent([LeadershipExpectedCount].self, forKey: .expectedCounts) ?? []
+        }
+        
+        let coverage = try? container.nestedContainer(keyedBy: CoverageKeys.self, forKey: .coverage)
+        peopleTotal = try container.decodeIfPresent(Int.self, forKey: .peopleTotal)
+            ?? container.decodeIfPresent(Int.self, forKey: .teamSize)
+            ?? coverage?.decodeIfPresent(Int.self, forKey: .estimated)
+            ?? 0
+        peopleEstimated = try container.decodeIfPresent(Int.self, forKey: .peopleEstimated)
+            ?? coverage?.decodeIfPresent(Int.self, forKey: .estimated)
+            ?? peopleTotal
+        peopleUnmatched = try container.decodeIfPresent(Int.self, forKey: .peopleUnmatched)
+            ?? coverage?.decodeIfPresent(Int.self, forKey: .noData)
+            ?? max(peopleTotal - peopleEstimated, 0)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(caveat, forKey: .caveat)
+        try container.encodeIfPresent(method, forKey: .method)
+        try container.encodeIfPresent(sourceURL, forKey: .sourceURL)
+        try container.encodeIfPresent(companyPageURL, forKey: .companyPageURL)
+        try container.encodeIfPresent(isEstimate, forKey: .isEstimate)
+        try container.encode(peopleTotal, forKey: .peopleTotal)
+        try container.encode(expectedCounts, forKey: .expectedCounts)
+        try container.encode(peopleEstimated, forKey: .peopleEstimated)
+        try container.encode(peopleUnmatched, forKey: .peopleUnmatched)
+    }
+}
+
+struct LeadershipExpectedCount: Codable {
+    let group: String
+    let expected: Double
+    
+    enum CodingKeys: String, CodingKey {
+        case group
+        case expected
+        case percent
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        group = try container.decode(String.self, forKey: .group)
+        expected = try container.decodeIfPresent(Double.self, forKey: .expected)
+            ?? container.decodeIfPresent(Double.self, forKey: .percent)
+            ?? 0
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(group, forKey: .group)
+        try container.encode(expected, forKey: .expected)
+    }
 }
 
 // MARK: - Political Leaning Response
