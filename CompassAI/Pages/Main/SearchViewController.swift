@@ -178,6 +178,8 @@ class SearchViewController: BaseViewController, BannerViewDelegate {  // ← Add
         searchTextField.layer.borderWidth = 1
         searchTextField.layer.cornerRadius = 8
         searchTextField.backgroundColor = .white
+        searchTextField.autocorrectionType = .no
+        searchTextField.spellCheckingType = .no
         searchTextField.translatesAutoresizingMaskIntoConstraints = false
         searchTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
         searchTextField.addTarget(self, action: #selector(textFieldDidBeginEditing), for: .editingDidBegin)

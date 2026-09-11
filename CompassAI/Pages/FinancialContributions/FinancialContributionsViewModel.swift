@@ -45,11 +45,10 @@ class FinancialContributionsViewModel {
                 
                 switch result {
                 case .success(let financialResponse):
-                    self?.onDataLoaded?(financialResponse.fecFinancialContributionsSummaryText)
                     self?.onFullDataLoaded?(financialResponse)
+                    self?.onDataLoaded?(financialResponse.fecFinancialContributionsSummaryText)
                 case .failure(let error):
-                    self?.onDataLoaded?("Could not find a matching political committee for that company.\n\n We are still working on this and will include it soon!")
-//                    self?.onError?(error.localizedDescription)
+                    self?.onError?(error.localizedDescription)
                 }
             }
         }
@@ -75,8 +74,8 @@ class FinancialContributionsViewModel {
     func loadPersistedData(_ financialData: FinancialContributionsResponse) {
         DispatchQueue.main.async { [weak self] in
             self?.onLoadingStateChanged?(false)
-            self?.onDataLoaded?(financialData.fecFinancialContributionsSummaryText)
             self?.onFullDataLoaded?(financialData)
+            self?.onDataLoaded?(financialData.fecFinancialContributionsSummaryText)
         }
     }
 

@@ -8,6 +8,7 @@
 enum NetworkError: Error {
     case invalidURL
     case httpError(Int)
+    case apiError(String, Int?)
     case decodingError
     case noData
     
@@ -17,6 +18,8 @@ enum NetworkError: Error {
             return "Invalid URL"
         case .httpError(let code):
             return "HTTP Error: \(code)"
+        case .apiError(let message, _):
+            return message
         case .decodingError:
             return "Failed to decode response"
         case .noData:

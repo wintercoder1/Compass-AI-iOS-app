@@ -480,12 +480,27 @@ struct PoliticalLeaningResponseError: Codable {
 
 // MARK: - Financial Contributions Response
 struct FinancialContributionsResponse: Codable {
+    let id: Int?
     let topic: String
-    let normalizedTopicName: String
+    let normalizedTopicName: String?
     let timestamp: String?
     let committeeId: String
     let individualId: Int
     let fecFinancialContributionsSummaryText: String
+    let summary: String?
+    let message: String?
+    let scopeNote: String?
+    let sourceURL: String?
+    let committeeStatus: String?
+    let hasPAC: Bool?
+    let resolvedViaParent: String?
+    let searchedAs: [String]?
+    let cached: Bool?
+    let fullAnswerAvailable: Bool?
+    let percentContributionsAvailable: Bool?
+    let textAvailable: Bool?
+    let error: Bool?
+    let favorited: Bool?
     let upvoteCount: Int?
     let downvoteCount: Int?
     let timeRangeOfData: String?
@@ -498,12 +513,27 @@ struct FinancialContributionsResponse: Codable {
     var leadershipContributionsToCommittee: [LeadershipContribution]?
     
     enum CodingKeys: String, CodingKey {
+        case id
         case topic
         case normalizedTopicName = "normalized_topic_name"
         case timestamp
         case committeeId = "committee_id"
         case individualId = "individual_id"
         case fecFinancialContributionsSummaryText = "fec_financial_contributions_summary_text"
+        case summary
+        case message
+        case scopeNote = "scope_note"
+        case sourceURL = "source_url"
+        case committeeStatus = "committee_status"
+        case hasPAC = "has_pac"
+        case resolvedViaParent = "resolved_via_parent"
+        case searchedAs = "searched_as"
+        case cached
+        case fullAnswerAvailable = "full_answer_available"
+        case percentContributionsAvailable = "percent_contributions_available"
+        case textAvailable = "text_available"
+        case error
+        case favorited
         case upvoteCount = "upvote_count"
         case downvoteCount = "downvote_count"
         case timeRangeOfData = "time_range_of_data"
@@ -515,17 +545,153 @@ struct FinancialContributionsResponse: Codable {
         case contributionTotals = "contribution_totals"
         case leadershipContributionsToCommittee = "leadership_contributors_to_committee"
     }
+
+    init(
+        id: Int? = nil,
+        topic: String,
+        normalizedTopicName: String?,
+        timestamp: String?,
+        committeeId: String,
+        individualId: Int,
+        fecFinancialContributionsSummaryText: String,
+        summary: String? = nil,
+        message: String? = nil,
+        scopeNote: String? = nil,
+        sourceURL: String? = nil,
+        committeeStatus: String? = nil,
+        hasPAC: Bool? = nil,
+        resolvedViaParent: String? = nil,
+        searchedAs: [String]? = nil,
+        cached: Bool? = nil,
+        fullAnswerAvailable: Bool? = nil,
+        percentContributionsAvailable: Bool? = nil,
+        textAvailable: Bool? = nil,
+        error: Bool? = nil,
+        favorited: Bool? = nil,
+        upvoteCount: Int?,
+        downvoteCount: Int?,
+        timeRangeOfData: String?,
+        cycleEndYear: String?,
+        committeeName: String?,
+        queryType: String?,
+        debug: FinancialDebugInfo?,
+        percentContributions: PercentContributions?,
+        contributionTotals: [ContributionTotal]?,
+        leadershipContributionsToCommittee: [LeadershipContribution]?
+    ) {
+        self.id = id
+        self.topic = topic
+        self.normalizedTopicName = normalizedTopicName
+        self.timestamp = timestamp
+        self.committeeId = committeeId
+        self.individualId = individualId
+        self.fecFinancialContributionsSummaryText = fecFinancialContributionsSummaryText
+        self.summary = summary
+        self.message = message
+        self.scopeNote = scopeNote
+        self.sourceURL = sourceURL
+        self.committeeStatus = committeeStatus
+        self.hasPAC = hasPAC
+        self.resolvedViaParent = resolvedViaParent
+        self.searchedAs = searchedAs
+        self.cached = cached
+        self.fullAnswerAvailable = fullAnswerAvailable
+        self.percentContributionsAvailable = percentContributionsAvailable
+        self.textAvailable = textAvailable
+        self.error = error
+        self.favorited = favorited
+        self.upvoteCount = upvoteCount
+        self.downvoteCount = downvoteCount
+        self.timeRangeOfData = timeRangeOfData
+        self.cycleEndYear = cycleEndYear
+        self.committeeName = committeeName
+        self.queryType = queryType
+        self.debug = debug
+        self.percentContributions = percentContributions
+        self.contributionTotals = contributionTotals
+        self.leadershipContributionsToCommittee = leadershipContributionsToCommittee
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(Int.self, forKey: .id)
+        topic = try container.decodeIfPresent(String.self, forKey: .topic) ?? ""
+        normalizedTopicName = try container.decodeIfPresent(String.self, forKey: .normalizedTopicName)
+        timestamp = try container.decodeIfPresent(String.self, forKey: .timestamp)
+        committeeId = try container.decodeIfPresent(String.self, forKey: .committeeId) ?? ""
+        individualId = try container.decodeIfPresent(Int.self, forKey: .individualId) ?? 0
+        summary = try container.decodeIfPresent(String.self, forKey: .summary)
+        message = try container.decodeIfPresent(String.self, forKey: .message)
+        scopeNote = try container.decodeIfPresent(String.self, forKey: .scopeNote)
+        sourceURL = try container.decodeIfPresent(String.self, forKey: .sourceURL)
+        committeeStatus = try container.decodeIfPresent(String.self, forKey: .committeeStatus)
+        hasPAC = try container.decodeIfPresent(Bool.self, forKey: .hasPAC)
+        resolvedViaParent = try container.decodeIfPresent(String.self, forKey: .resolvedViaParent)
+        searchedAs = try container.decodeIfPresent([String].self, forKey: .searchedAs)
+        cached = try container.decodeIfPresent(Bool.self, forKey: .cached)
+        fullAnswerAvailable = try container.decodeIfPresent(Bool.self, forKey: .fullAnswerAvailable)
+        percentContributionsAvailable = try container.decodeIfPresent(Bool.self, forKey: .percentContributionsAvailable)
+        textAvailable = try container.decodeIfPresent(Bool.self, forKey: .textAvailable)
+        error = try container.decodeIfPresent(Bool.self, forKey: .error)
+        favorited = try container.decodeIfPresent(Bool.self, forKey: .favorited)
+        upvoteCount = try container.decodeIfPresent(Int.self, forKey: .upvoteCount)
+        downvoteCount = try container.decodeIfPresent(Int.self, forKey: .downvoteCount)
+        timeRangeOfData = try container.decodeIfPresent(String.self, forKey: .timeRangeOfData)
+        cycleEndYear = try container.decodeIfPresent(String.self, forKey: .cycleEndYear)
+        committeeName = try container.decodeIfPresent(String.self, forKey: .committeeName)
+        queryType = try container.decodeIfPresent(String.self, forKey: .queryType)
+        debug = try container.decodeIfPresent(FinancialDebugInfo.self, forKey: .debug)
+        percentContributions = try container.decodeIfPresent(PercentContributions.self, forKey: .percentContributions)
+        contributionTotals = try container.decodeIfPresent([ContributionTotal].self, forKey: .contributionTotals)
+        leadershipContributionsToCommittee = try container.decodeIfPresent([LeadershipContribution].self, forKey: .leadershipContributionsToCommittee)
+
+        let summaryText = try container.decodeIfPresent(String.self, forKey: .fecFinancialContributionsSummaryText)
+        fecFinancialContributionsSummaryText = Self.displayText(
+            summaryText: summaryText,
+            message: message,
+            scopeNote: scopeNote,
+            searchedAs: searchedAs
+        )
+    }
+
+    private static func displayText(
+        summaryText: String?,
+        message: String?,
+        scopeNote: String?,
+        searchedAs: [String]?
+    ) -> String {
+        if let summaryText, !summaryText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return summaryText
+        }
+
+        let parts = [message, scopeNote].compactMap { text -> String? in
+            guard let text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                return nil
+            }
+            return text
+        }
+
+        if !parts.isEmpty {
+            return parts.joined(separator: "\n\n")
+        }
+
+        if let searchedAs, !searchedAs.isEmpty {
+            return "No political committee matching this company was found in the FEC data.\n\nSearched as: \(searchedAs.joined(separator: ", "))"
+        }
+
+        return "No financial contribution details are available for this organization."
+    }
 }
 
 // MARK: - Financial Debug Info
 struct FinancialDebugInfo: Codable {
-    let modelUsed: String
-    let automatedEntry: Bool
-    let dateGenerated: String
-    let truncatedData: Bool
-    let percentOfDataWithinTimeRange: Int
-    let persistedResponse: Bool
-    let newlyGenerated: Bool
+    let modelUsed: String?
+    let automatedEntry: Bool?
+    let dateGenerated: String?
+    let truncatedData: Bool?
+    let percentOfDataWithinTimeRange: Int?
+    let persistedResponse: Bool?
+    let newlyGenerated: Bool?
     
     enum CodingKeys: String, CodingKey {
         case modelUsed = "model_used"
@@ -535,6 +701,35 @@ struct FinancialDebugInfo: Codable {
         case percentOfDataWithinTimeRange = "precent_of_data_within_time_range"
         case persistedResponse = "persisted_response"
         case newlyGenerated = "newly_generated"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        modelUsed = try? container.decodeIfPresent(String.self, forKey: .modelUsed)
+        automatedEntry = try? container.decodeIfPresent(Bool.self, forKey: .automatedEntry)
+        dateGenerated = try? container.decodeIfPresent(String.self, forKey: .dateGenerated)
+        truncatedData = try? container.decodeIfPresent(Bool.self, forKey: .truncatedData)
+        percentOfDataWithinTimeRange = try? container.decodeIfPresent(Int.self, forKey: .percentOfDataWithinTimeRange)
+        persistedResponse = try? container.decodeIfPresent(Bool.self, forKey: .persistedResponse)
+        newlyGenerated = try? container.decodeIfPresent(Bool.self, forKey: .newlyGenerated)
+    }
+
+    init(
+        modelUsed: String?,
+        automatedEntry: Bool?,
+        dateGenerated: String?,
+        truncatedData: Bool?,
+        percentOfDataWithinTimeRange: Int?,
+        persistedResponse: Bool?,
+        newlyGenerated: Bool?
+    ) {
+        self.modelUsed = modelUsed
+        self.automatedEntry = automatedEntry
+        self.dateGenerated = dateGenerated
+        self.truncatedData = truncatedData
+        self.percentOfDataWithinTimeRange = percentOfDataWithinTimeRange
+        self.persistedResponse = persistedResponse
+        self.newlyGenerated = newlyGenerated
     }
 }
 

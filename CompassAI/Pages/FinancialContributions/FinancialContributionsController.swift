@@ -930,26 +930,44 @@ class FinancialContributionsViewController: BaseViewController {
         titleLabel.numberOfLines = 0
         
         let contentLabel = UILabel()
-        contentLabel.text = financialText
+        contentLabel.text = financialContributions?.message ?? financialText
         contentLabel.font = UIFont.systemFont(ofSize: 16)
         contentLabel.textColor = .black
         contentLabel.numberOfLines = 0
+
+        let scopeNoteLabel = UILabel()
+        scopeNoteLabel.font = UIFont.systemFont(ofSize: 16)
+        scopeNoteLabel.textColor = .systemGray
+        scopeNoteLabel.numberOfLines = 0
+        if let scopeNote = financialContributions?.scopeNote {
+            scopeNoteLabel.attributedText = NSAttributedString(
+                string: scopeNote,
+                attributes: [
+                    .font: UIFont.systemFont(ofSize: 16),
+                    .foregroundColor: UIColor.systemGray
+                ]
+            )
+        }
         
         let disclaimerLabel = UILabel()
         let disclaimerText = "This financial information is based on Federal Election Commission filings from the 2024 election cycle."
         let disclaimerTextAttributedString = NSMutableAttributedString(string: disclaimerText)
-        disclaimerLabel.attributedText = disclaimerTextAttributedString
         disclaimerLabel.font = UIFont.systemFont(ofSize: 16)
-        disclaimerLabel.textColor = .gray
+        disclaimerLabel.textColor = .systemGray
         disclaimerLabel.numberOfLines = 3
         let nsRange = NSRange(location: 0, length: disclaimerText.utf16.count)
         if let currentFont = disclaimerLabel.font {
             let italicFont = UIFont(descriptor: currentFont.fontDescriptor.withSymbolicTraits(.traitItalic)!, size: currentFont.pointSize)
             disclaimerTextAttributedString.addAttribute(.font, value: italicFont, range: nsRange)
         }
+        disclaimerLabel.attributedText = disclaimerTextAttributedString
         
         stackView.addArrangedSubview(titleLabel)
         stackView.addArrangedSubview(contentLabel)
+        if let scopeNote = financialContributions?.scopeNote,
+           !scopeNote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            stackView.addArrangedSubview(scopeNoteLabel)
+        }
         stackView.addArrangedSubview(disclaimerLabel)
         
         detailsCardView.addSubview(stackView)

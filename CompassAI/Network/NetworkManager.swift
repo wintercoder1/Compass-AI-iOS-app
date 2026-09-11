@@ -51,7 +51,12 @@ class NetworkManager {
             
             guard 200...299 ~= httpResponse.statusCode else {
                 print("HTTP error: \(httpResponse.statusCode)")
-                completion(.failure(.httpError(httpResponse.statusCode)))
+                let message = data.flatMap(Self.errorMessage(from:))
+                if let message {
+                    completion(.failure(.apiError(message, httpResponse.statusCode)))
+                } else {
+                    completion(.failure(.httpError(httpResponse.statusCode)))
+                }
                 return
             }
             
@@ -68,6 +73,23 @@ class NetworkManager {
                 completion(.failure(.decodingError))
             }
         }.resume()
+    }
+
+    private static func errorMessage(from data: Data) -> String? {
+        guard
+            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
+            return nil
+        }
+
+        for key in ["message", "detail", "error"] {
+            if let message = object[key] as? String,
+               !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return message
+            }
+        }
+
+        return nil
     }
     
     // MARK: - Political Leaning
