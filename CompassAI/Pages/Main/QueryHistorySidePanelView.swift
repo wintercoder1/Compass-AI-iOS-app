@@ -13,6 +13,8 @@ import CoreData
 protocol QueryHistorySidePanelViewDelegate: AnyObject {
     func sidePanelDidSelectItem(_ objectID: NSManagedObjectID)
     func sidePanelDidDeleteItem(_ objectID: NSManagedObjectID, at indexPath: IndexPath)
+    func sidePanelDidSelectQuizResult(_ savedQuizResult: SavedQuizResult)
+    func sidePanelDidDeleteQuizResult(_ savedQuizResult: SavedQuizResult, at indexPath: IndexPath)
 }
 
 class QueryAnswerCellViewModel {
@@ -23,6 +25,14 @@ class QueryAnswerCellViewModel {
         self.topicName = coreDataObject.topic
         self.category = coreDataObject.category
         self.objectID = coreDataObject.objectID
+    }
+}
+
+class SavedQuizResultCellViewModel {
+    let savedQuizResult: SavedQuizResult
+    
+    init(savedQuizResult: SavedQuizResult) {
+        self.savedQuizResult = savedQuizResult
     }
 }
 
@@ -44,6 +54,7 @@ class QueryHistorySidePanelView: UIView {
     
 //    private var persistedQueryAnswers: [QueryAnswerObject] = []
     private var persistedQueryAnswers: [QueryAnswerCellViewModel] = []
+    private var savedQuizResults: [SavedQuizResultCellViewModel] = []
     
     
     // MARK: - Initialization
@@ -157,7 +168,6 @@ class QueryHistorySidePanelView: UIView {
     }
     
     private func queryAnswerArrayFromCoreData(coreDataQueryAnswers: [QueryAnswerObject]) -> [QueryAnswerCellViewModel] {
-        let n = coreDataQueryAnswers.count
         var answers = [QueryAnswerCellViewModel]()
         for cd in coreDataQueryAnswers {
             let mem = QueryAnswerCellViewModel()
@@ -212,9 +222,10 @@ class QueryHistorySidePanelView: UIView {
         }
     }
     
-    func updateData(_ coreDataQueryAnswers: [QueryAnswerObject]) {
+    func updateData(_ coreDataQueryAnswers: [QueryAnswerObject], quizResults: [SavedQuizResult] = []) {
 //        self.persistedQueryAnswers = coreDataQueryAnswers
         self.persistedQueryAnswers = queryAnswerArrayFromCoreData(coreDataQueryAnswers: coreDataQueryAnswers)
+        self.savedQuizResults = quizResults.map(SavedQuizResultCellViewModel.init)
         tableView.reloadData()
     }
     
@@ -226,6 +237,12 @@ class QueryHistorySidePanelView: UIView {
         guard index < persistedQueryAnswers.count else { return }
         persistedQueryAnswers.remove(at: index)
         tableView.deleteRows(at: [IndexPath(row: index, section: 0)], with: .fade)
+    }
+    
+    func removeQuizResult(at index: Int) {
+        guard index < savedQuizResults.count else { return }
+        savedQuizResults.remove(at: index)
+        tableView.deleteRows(at: [IndexPath(row: index, section: 1)], with: .fade)
     }
     
     
@@ -246,18 +263,30 @@ class QueryHistorySidePanelView: UIView {
 extension QueryHistorySidePanelView: UITableViewDataSource, UITableViewDelegate {
     
     func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
+        return 2
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return persistedQueryAnswers.count
+        return section == 0 ? persistedQueryAnswers.count : savedQuizResults.count
+    }
+    
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        if section == 0 {
+            return persistedQueryAnswers.isEmpty ? nil : "Favorited Answers"
+        }
+        return savedQuizResults.isEmpty ? nil : "Saved Quiz Results"
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "QueryHistoryCellInternal", for: indexPath) as! QueryHistoryCellInternal
         
-        let queryAnswer = persistedQueryAnswers[indexPath.row]
-        cell.configure(with: queryAnswer)
+        if indexPath.section == 0 {
+            let queryAnswer = persistedQueryAnswers[indexPath.row]
+            cell.configure(with: queryAnswer)
+        } else {
+            let quizResult = savedQuizResults[indexPath.row]
+            cell.configure(with: quizResult)
+        }
         
         return cell
     }
@@ -272,8 +301,15 @@ extension QueryHistorySidePanelView: UITableViewDataSource, UITableViewDelegate 
     
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            let item = persistedQueryAnswers[indexPath.row]
-            delegate?.sidePanelDidDeleteItem(item.objectID!, at: indexPath)
+            if indexPath.section == 0 {
+                let item = persistedQueryAnswers[indexPath.row]
+                if let objectID = item.objectID {
+                    delegate?.sidePanelDidDeleteItem(objectID, at: indexPath)
+                }
+            } else {
+                let item = savedQuizResults[indexPath.row]
+                delegate?.sidePanelDidDeleteQuizResult(item.savedQuizResult, at: indexPath)
+            }
         }
     }
     
@@ -283,8 +319,15 @@ extension QueryHistorySidePanelView: UITableViewDataSource, UITableViewDelegate 
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        let item = persistedQueryAnswers[indexPath.row]
-        delegate?.sidePanelDidSelectItem(item.objectID!)
+        if indexPath.section == 0 {
+            let item = persistedQueryAnswers[indexPath.row]
+            if let objectID = item.objectID {
+                delegate?.sidePanelDidSelectItem(objectID)
+            }
+        } else {
+            let item = savedQuizResults[indexPath.row]
+            delegate?.sidePanelDidSelectQuizResult(item.savedQuizResult)
+        }
     }
 }
 
@@ -348,6 +391,11 @@ private class QueryHistoryCellInternal: UITableViewCell {
             categoryLabel.text = ""
 //            categoryLabel.text = "Unknown Category"
         }
+    }
+    
+    func configure(with quizResultCellViewModel: SavedQuizResultCellViewModel) {
+        topicLabel.text = quizResultCellViewModel.savedQuizResult.title
+        categoryLabel.text = quizResultCellViewModel.savedQuizResult.subtitle
     }
     
     func configure(withCoreData queryAnswer: QueryAnswerObject) {

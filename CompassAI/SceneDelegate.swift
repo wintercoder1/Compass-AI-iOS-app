@@ -25,6 +25,27 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         window?.rootViewController = navigationController
         window?.makeKeyAndVisible()
+        
+        if let url = connectionOptions.urlContexts.first?.url {
+            appCoordinator?.handleIncomingURL(url)
+        } else if let userActivity = connectionOptions.userActivities.first,
+                  userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+                  let url = userActivity.webpageURL {
+            appCoordinator?.handleIncomingURL(url)
+        }
+    }
+    
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let url = URLContexts.first?.url else { return }
+        appCoordinator?.handleIncomingURL(url)
+    }
+    
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+              let url = userActivity.webpageURL else {
+            return
+        }
+        appCoordinator?.handleIncomingURL(url)
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -60,4 +81,3 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 
 }
-

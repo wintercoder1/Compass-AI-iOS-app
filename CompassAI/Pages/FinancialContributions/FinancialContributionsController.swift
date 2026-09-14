@@ -27,6 +27,7 @@ class FinancialContributionsViewController: BaseViewController {
     private let footerStackView = UIStackView()
     private let bottomPaddingView = UIView()
     private var saveButton: UIButton!
+    private var shareButton: UIButton!
     
     // AdMob banners
     private var bannerView1: BannerView!
@@ -132,6 +133,7 @@ class FinancialContributionsViewController: BaseViewController {
         setupTopRecipientsCard()
         setupDetailsCard()
         setupSaveButton()
+        setupShareButton()
         setupLoadingView()
         setupBannerAds()
         setupFooterOld()
@@ -227,6 +229,15 @@ class FinancialContributionsViewController: BaseViewController {
         detailsCardView.addSubview(saveButton)
     }
     
+    private func setupShareButton() {
+        shareButton = UIButton(type: .system)
+        shareButton.translatesAutoresizingMaskIntoConstraints = false
+        shareButton.addTarget(self, action: #selector(shareButtonTapped), for: .touchUpInside)
+        shareButton.isHidden = true
+        updateShareButtonAppearance()
+        detailsCardView.addSubview(shareButton)
+    }
+    
     private func updateSaveButtonAppearance() {
         let heartImageName = isSaved ? "heart.fill" : "heart"
         saveButton.setImage(UIImage(systemName: heartImageName), for: .normal)
@@ -238,6 +249,18 @@ class FinancialContributionsViewController: BaseViewController {
         saveButton.layer.shadowRadius = 4
         saveButton.layer.shadowOpacity = 0.1
         saveButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+    }
+    
+    private func updateShareButtonAppearance() {
+        shareButton.setImage(UIImage(systemName: "square.and.arrow.up"), for: .normal)
+        shareButton.tintColor = .systemBlue
+        shareButton.backgroundColor = UIColor.white.withAlphaComponent(0.9)
+        shareButton.layer.cornerRadius = 20
+        shareButton.layer.shadowColor = UIColor.black.cgColor
+        shareButton.layer.shadowOffset = CGSize(width: 0, height: 2)
+        shareButton.layer.shadowRadius = 4
+        shareButton.layer.shadowOpacity = 0.1
+        shareButton.accessibilityLabel = "Share answer"
     }
     
     /*
@@ -857,9 +880,14 @@ class FinancialContributionsViewController: BaseViewController {
             detailsCardView.heightAnchor.constraint(greaterThanOrEqualToConstant: 200),
             
             saveButton.bottomAnchor.constraint(equalTo: detailsCardView.bottomAnchor, constant: -18),
-            saveButton.trailingAnchor.constraint(equalTo: detailsCardView.trailingAnchor, constant: -18),
+            saveButton.trailingAnchor.constraint(equalTo: shareButton.leadingAnchor, constant: -10),
             saveButton.widthAnchor.constraint(equalToConstant: 40),
             saveButton.heightAnchor.constraint(equalToConstant: 40),
+            
+            shareButton.bottomAnchor.constraint(equalTo: detailsCardView.bottomAnchor, constant: -18),
+            shareButton.trailingAnchor.constraint(equalTo: detailsCardView.trailingAnchor, constant: -18),
+            shareButton.widthAnchor.constraint(equalToConstant: 40),
+            shareButton.heightAnchor.constraint(equalToConstant: 40),
             
             contributionsBreakdownCardView.topAnchor.constraint(equalTo: detailsCardView.bottomAnchor, constant: 20),
             contributionsBreakdownCardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
@@ -901,6 +929,7 @@ class FinancialContributionsViewController: BaseViewController {
     private func showLoading() {
         loadingView.isHidden = false
         saveButton.isHidden = true
+        shareButton.isHidden = true
         contributionsBreakdownCardView.isHidden = true
         leadershipContributionsCardView.isHidden = true
         topRecipientsCardView.isHidden = true
@@ -912,11 +941,13 @@ class FinancialContributionsViewController: BaseViewController {
     
     private func showFinancialContent(_ financialText: String) {
         saveButton.isHidden = false
+        shareButton.isHidden = false
         detailsCardView.subviews.forEach { subview in
-            if subview != loadingView && subview != saveButton {
+            if subview != loadingView && subview != saveButton && subview != shareButton {
                 subview.removeFromSuperview()
             }
         }
+        let separatedText = separatedFinancialText(from: financialText)
         
         let stackView = UIStackView()
         stackView.axis = .vertical
@@ -930,7 +961,7 @@ class FinancialContributionsViewController: BaseViewController {
         titleLabel.numberOfLines = 0
         
         let contentLabel = UILabel()
-        contentLabel.text = financialContributions?.message ?? financialText
+        contentLabel.text = separatedText.primary
         contentLabel.font = UIFont.systemFont(ofSize: 16)
         contentLabel.textColor = .black
         contentLabel.numberOfLines = 0
@@ -939,7 +970,7 @@ class FinancialContributionsViewController: BaseViewController {
         scopeNoteLabel.font = UIFont.systemFont(ofSize: 16)
         scopeNoteLabel.textColor = .systemGray
         scopeNoteLabel.numberOfLines = 0
-        if let scopeNote = financialContributions?.scopeNote {
+        if let scopeNote = separatedText.scopeNote {
             scopeNoteLabel.attributedText = NSAttributedString(
                 string: scopeNote,
                 attributes: [
@@ -964,7 +995,7 @@ class FinancialContributionsViewController: BaseViewController {
         
         stackView.addArrangedSubview(titleLabel)
         stackView.addArrangedSubview(contentLabel)
-        if let scopeNote = financialContributions?.scopeNote,
+        if let scopeNote = separatedText.scopeNote,
            !scopeNote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             stackView.addArrangedSubview(scopeNoteLabel)
         }
@@ -983,11 +1014,39 @@ class FinancialContributionsViewController: BaseViewController {
         updateLeadershipContributionsCard()
         updateTopRecipientsCard()
     }
+
+    private func separatedFinancialText(from financialText: String) -> (primary: String, scopeNote: String?) {
+        let trimmedScopeNote = financialContributions?.scopeNote?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let scopeNote = trimmedScopeNote, !scopeNote.isEmpty {
+            let primaryText = financialContributions?.message?.trimmingCharacters(in: .whitespacesAndNewlines)
+            return (primaryText?.isEmpty == false ? primaryText! : financialText, scopeNote)
+        }
+
+        let scopeNotePrefix = "Covers corporate political action committee contributions only."
+        let paragraphs = financialText
+            .components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        guard let scopeNoteIndex = paragraphs.firstIndex(where: { $0.hasPrefix(scopeNotePrefix) }) else {
+            return (financialText, nil)
+        }
+
+        let primaryText = paragraphs[..<scopeNoteIndex].joined(separator: "\n\n")
+        let remainingText = paragraphs[(scopeNoteIndex + 1)...].joined(separator: "\n\n")
+        let scopeNote = paragraphs[scopeNoteIndex]
+        let rebuiltPrimary = [primaryText, remainingText]
+            .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .joined(separator: "\n\n")
+
+        return (rebuiltPrimary, scopeNote)
+    }
     
     private func showError(_ message: String) {
         saveButton.isHidden = true
+        shareButton.isHidden = true
         detailsCardView.subviews.forEach { subview in
-            if subview != loadingView && subview != saveButton {
+            if subview != loadingView && subview != saveButton && subview != shareButton {
                 subview.removeFromSuperview()
             }
         }
@@ -1094,6 +1153,17 @@ class FinancialContributionsViewController: BaseViewController {
                 self.updateSaveButtonAppearance()
             }
         }
+    }
+    
+    @objc private func shareButtonTapped() {
+        guard !organizationName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let url = CompassDeepLink.answerURL(topic: organizationName, category: .financialContributions) else {
+            return
+        }
+        
+        let activityViewController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        activityViewController.popoverPresentationController?.sourceView = shareButton
+        present(activityViewController, animated: true)
     }
     
     private func makeOrganizationAnalysis(from response: FinancialContributionsResponse) -> OrganizationAnalysis {

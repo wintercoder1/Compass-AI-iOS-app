@@ -16,6 +16,10 @@ protocol Coordinator: AnyObject {
 class AppCoordinator: Coordinator {
     let navigationController: UINavigationController
     private var searchViewModel: SearchViewModel?
+    private weak var tabBarController: UITabBarController?
+    private weak var searchViewController: SearchViewController?
+    private weak var quizViewController: QuizViewController?
+    private var pendingDeepLink: CompassDeepLink?
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -33,8 +37,65 @@ class AppCoordinator: Coordinator {
         
         let searchVC = SearchViewController()
         searchVC.viewModel = viewModel
+        searchViewController = searchVC
+        searchVC.tabBarItem = UITabBarItem(
+            title: "Search",
+            image: UIImage(systemName: "magnifyingglass"),
+            selectedImage: UIImage(systemName: "magnifyingglass")
+        )
         
-        navigationController.setViewControllers([searchVC], animated: false)
+        let quizVC = QuizViewController()
+        quizViewController = quizVC
+        quizVC.tabBarItem = UITabBarItem(
+            title: "Quiz",
+            image: UIImage(systemName: "questionmark.circle"),
+            selectedImage: UIImage(systemName: "questionmark.circle.fill")
+        )
+        
+        let tabBarController = UITabBarController()
+        self.tabBarController = tabBarController
+        tabBarController.viewControllers = [quizVC, searchVC]
+        tabBarController.selectedIndex = 0
+        tabBarController.tabBar.backgroundColor = .systemBackground
+        tabBarController.tabBar.tintColor = .systemBlue
+        tabBarController.tabBar.unselectedItemTintColor = .secondaryLabel
+        
+        quizVC.onCompanySelected = { [weak tabBarController, weak searchVC] company in
+            tabBarController?.selectedIndex = 1
+            searchVC?.prefillCompanyForSearch(company)
+        }
+        
+        navigationController.setViewControllers([tabBarController], animated: false)
+        
+        if let pendingDeepLink {
+            self.pendingDeepLink = nil
+            handleDeepLink(pendingDeepLink)
+        }
+    }
+    
+    func handleIncomingURL(_ url: URL) {
+        guard let deepLink = CompassDeepLink.parse(url) else {
+            return
+        }
+        handleDeepLink(deepLink)
+    }
+    
+    private func handleDeepLink(_ deepLink: CompassDeepLink) {
+        guard let tabBarController else {
+            pendingDeepLink = deepLink
+            return
+        }
+        
+        navigationController.popToRootViewController(animated: false)
+        
+        switch deepLink {
+        case .quizResult(let token):
+            tabBarController.selectedIndex = 0
+            quizViewController?.loadSharedQuizResult(token: token)
+        case .answer(let topic, let category):
+            tabBarController.selectedIndex = 1
+            searchViewController?.openSharedAnswer(topic: topic, category: category)
+        }
     }
     
     func showLoadingScreen() {

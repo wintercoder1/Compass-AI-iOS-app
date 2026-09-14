@@ -7,6 +7,467 @@
 
 import Foundation
 
+// MARK: - Compass Match Quiz
+struct SavedQuizResult: Codable, Equatable {
+    let id: UUID
+    let shareToken: String
+    let title: String
+    let subtitle: String
+    let savedAt: Date
+    
+    init(id: UUID = UUID(), shareToken: String, title: String, subtitle: String, savedAt: Date = Date()) {
+        self.id = id
+        self.shareToken = shareToken
+        self.title = title
+        self.subtitle = subtitle
+        self.savedAt = savedAt
+    }
+}
+
+final class SavedQuizResultStore {
+    static let shared = SavedQuizResultStore()
+    
+    private let storageKey = "CorporateCompass.savedQuizResults"
+    private let userDefaults: UserDefaults
+    
+    init(userDefaults: UserDefaults = .standard) {
+        self.userDefaults = userDefaults
+    }
+    
+    func load() -> [SavedQuizResult] {
+        guard let data = userDefaults.data(forKey: storageKey),
+              let results = try? JSONDecoder().decode([SavedQuizResult].self, from: data) else {
+            return []
+        }
+        return results.sorted { $0.savedAt > $1.savedAt }
+    }
+    
+    func contains(shareToken: String?) -> Bool {
+        guard let shareToken else { return false }
+        return load().contains { $0.shareToken == shareToken }
+    }
+    
+    func save(_ result: SavedQuizResult) {
+        var results = load().filter { $0.shareToken != result.shareToken }
+        results.insert(result, at: 0)
+        persist(results)
+    }
+    
+    func remove(shareToken: String) {
+        persist(load().filter { $0.shareToken != shareToken })
+    }
+    
+    func remove(id: UUID) {
+        persist(load().filter { $0.id != id })
+    }
+    
+    private func persist(_ results: [SavedQuizResult]) {
+        guard let data = try? JSONEncoder().encode(results) else { return }
+        userDefaults.set(data, forKey: storageKey)
+    }
+}
+
+enum QuizOptionValue: Codable, Equatable {
+    case bool(Bool)
+    case int(Int)
+    case double(Double)
+    case string(String)
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(Bool.self) {
+            self = .bool(value)
+        } else if let value = try? container.decode(Int.self) {
+            self = .int(value)
+        } else if let value = try? container.decode(Double.self) {
+            self = .double(value)
+        } else {
+            self = .string(try container.decode(String.self))
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .bool(let value):
+            try container.encode(value)
+        case .int(let value):
+            try container.encode(value)
+        case .double(let value):
+            try container.encode(value)
+        case .string(let value):
+            try container.encode(value)
+        }
+    }
+    
+    var intValue: Int? {
+        switch self {
+        case .int(let value): return value
+        case .double(let value): return Int(value)
+        default: return nil
+        }
+    }
+    
+    var boolValue: Bool? {
+        if case .bool(let value) = self { return value }
+        return nil
+    }
+}
+
+struct QuizDefinitionResponse: Codable {
+    let quizVersion: String
+    let importance: QuizImportanceSection
+    let stances: [QuizStanceQuestion]
+    let categories: QuizCategorySection
+    let dealbreakers: QuizDealbreakerSection
+    let verification: QuizVerificationSection
+    let methodologyNote: String
+    let disclaimer: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case quizVersion = "quiz_version"
+        case importance
+        case stances
+        case categories
+        case dealbreakers
+        case verification
+        case methodologyNote = "methodology_note"
+        case disclaimer
+    }
+}
+
+struct QuizImportanceSection: Codable {
+    let prompt: String
+    let options: [QuizChoice]
+    let issues: [QuizIssue]
+}
+
+struct QuizIssue: Codable {
+    let key: String
+    let label: String
+    let help: String?
+}
+
+struct QuizChoice: Codable {
+    let value: QuizOptionValue
+    let label: String
+}
+
+struct QuizStanceQuestion: Codable {
+    let key: String
+    let prompt: String
+    let help: String?
+    let options: [QuizChoice]
+}
+
+struct QuizCategorySection: Codable {
+    let prompt: String
+    let options: [QuizCategoryOption]
+}
+
+struct QuizCategoryOption: Codable {
+    let value: String
+    let label: String
+    let companyCount: Int
+    let available: Bool
+    
+    enum CodingKeys: String, CodingKey {
+        case value
+        case label
+        case companyCount = "company_count"
+        case available
+    }
+}
+
+struct QuizDealbreakerSection: Codable {
+    let prompt: String
+    let help: String
+    let max: Int
+    let options: [QuizDealbreakerOption]
+}
+
+struct QuizDealbreakerOption: Codable {
+    let value: String
+    let label: String
+}
+
+struct QuizVerificationSection: Codable {
+    let key: String
+    let prompt: String
+    let options: [QuizChoice]
+}
+
+struct QuizSubmissionRequest: Codable {
+    let quizVersion: String
+    let weights: [String: Int]
+    let stances: [String: QuizOptionValue]
+    let categories: [String]
+    let dealbreakers: [String]
+    
+    enum CodingKeys: String, CodingKey {
+        case quizVersion = "quiz_version"
+        case weights
+        case stances
+        case categories
+        case dealbreakers
+    }
+}
+
+struct QuizResultResponse: Codable {
+    let success: Bool
+    let quizVersion: String
+    let asOf: String
+    let methodologyNote: String
+    let disclaimer: String?
+    let results: [QuizCategoryResult]
+    let shareToken: String?
+    let shareWarning: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case success
+        case quizVersion = "quiz_version"
+        case asOf = "as_of"
+        case methodologyNote = "methodology_note"
+        case disclaimer
+        case results
+        case shareToken = "share_token"
+        case shareWarning = "share_warning"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        success = (try? container.decodeIfPresent(Bool.self, forKey: .success)) ?? true
+        quizVersion = (try? container.decodeIfPresent(String.self, forKey: .quizVersion)) ?? ""
+        asOf = (try? container.decodeIfPresent(String.self, forKey: .asOf)) ?? ""
+        methodologyNote = (try? container.decodeIfPresent(String.self, forKey: .methodologyNote)) ?? ""
+        disclaimer = try? container.decodeIfPresent(String.self, forKey: .disclaimer)
+        results = (try? container.decodeIfPresent([QuizCategoryResult].self, forKey: .results)) ?? []
+        shareToken = try? container.decodeIfPresent(String.self, forKey: .shareToken)
+        shareWarning = try? container.decodeIfPresent(String.self, forKey: .shareWarning)
+    }
+}
+
+struct QuizCategoryResult: Codable {
+    let category: String
+    let label: String
+    let considered: Int
+    let excluded: QuizExcludedCounts
+    let recommendations: [QuizRecommendation]
+    let alternatives: [QuizAlternative]
+    let allLowConfidence: Bool?
+    let nothingRated: Bool?
+    
+    enum CodingKeys: String, CodingKey {
+        case category
+        case label
+        case considered
+        case excluded
+        case recommendations
+        case alternatives
+        case allLowConfidence = "all_low_confidence"
+        case nothingRated = "nothing_rated"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        category = (try? container.decodeIfPresent(String.self, forKey: .category)) ?? ""
+        label = (try? container.decodeIfPresent(String.self, forKey: .label)) ?? category
+        considered = (try? container.decodeIfPresent(Int.self, forKey: .considered)) ?? 0
+        excluded = (try? container.decodeIfPresent(QuizExcludedCounts.self, forKey: .excluded)) ?? QuizExcludedCounts(didNotMatch: 0, couldNotVerify: 0)
+        recommendations = (try? container.decodeIfPresent([QuizRecommendation].self, forKey: .recommendations)) ?? []
+        alternatives = (try? container.decodeIfPresent([QuizAlternative].self, forKey: .alternatives)) ?? []
+        allLowConfidence = try? container.decodeIfPresent(Bool.self, forKey: .allLowConfidence)
+        nothingRated = try? container.decodeIfPresent(Bool.self, forKey: .nothingRated)
+    }
+}
+
+struct QuizExcludedCounts: Codable {
+    let didNotMatch: Int
+    let couldNotVerify: Int
+    
+    init(didNotMatch: Int, couldNotVerify: Int) {
+        self.didNotMatch = didNotMatch
+        self.couldNotVerify = couldNotVerify
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case didNotMatch = "did_not_match"
+        case couldNotVerify = "could_not_verify"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        didNotMatch = (try? container.decodeIfPresent(Int.self, forKey: .didNotMatch)) ?? 0
+        couldNotVerify = (try? container.decodeIfPresent(Int.self, forKey: .couldNotVerify)) ?? 0
+    }
+}
+
+struct QuizRecommendation: Codable {
+    let normalizedTopicName: String
+    let topic: String
+    let match: Double?
+    let coverage: Double
+    let band: String?
+    let status: String
+    let issueRows: [QuizIssueRow]
+    let missingIssues: [String]
+    let headline: String?
+    let bandText: String?
+    let lowConfidence: Bool?
+    let bestAvailable: Bool?
+    let confidenceNote: String?
+    let evidence: [QuizEvidence]
+    let notKnown: [String]
+    
+    enum CodingKeys: String, CodingKey {
+        case normalizedTopicName = "normalized_topic_name"
+        case topic
+        case match
+        case coverage
+        case band
+        case status
+        case issueRows = "issue_rows"
+        case missingIssues = "missing_issues"
+        case headline
+        case bandText = "band_text"
+        case lowConfidence = "low_confidence"
+        case bestAvailable = "best_available"
+        case confidenceNote = "confidence_note"
+        case evidence
+        case notKnown = "not_known"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        normalizedTopicName = (try? container.decodeIfPresent(String.self, forKey: .normalizedTopicName)) ?? ""
+        topic = (try? container.decodeIfPresent(String.self, forKey: .topic)) ?? normalizedTopicName
+        match = try? container.decodeIfPresent(Double.self, forKey: .match)
+        coverage = (try? container.decodeIfPresent(Double.self, forKey: .coverage)) ?? 0
+        band = try? container.decodeIfPresent(String.self, forKey: .band)
+        status = (try? container.decodeIfPresent(String.self, forKey: .status)) ?? "eligible"
+        issueRows = (try? container.decodeIfPresent([QuizIssueRow].self, forKey: .issueRows)) ?? []
+        missingIssues = (try? container.decodeIfPresent([String].self, forKey: .missingIssues)) ?? []
+        headline = try? container.decodeIfPresent(String.self, forKey: .headline)
+        bandText = try? container.decodeIfPresent(String.self, forKey: .bandText)
+        lowConfidence = try? container.decodeIfPresent(Bool.self, forKey: .lowConfidence)
+        bestAvailable = try? container.decodeIfPresent(Bool.self, forKey: .bestAvailable)
+        confidenceNote = try? container.decodeIfPresent(String.self, forKey: .confidenceNote)
+        evidence = (try? container.decodeIfPresent([QuizEvidence].self, forKey: .evidence)) ?? []
+        notKnown = (try? container.decodeIfPresent([String].self, forKey: .notKnown)) ?? []
+    }
+}
+
+struct QuizIssueRow: Codable {
+    let issue: String
+    let label: String
+    let weight: Int
+    let stance: QuizOptionValue?
+    let value: Double?
+    let alignment: Double?
+    let contribution: Double
+    let known: Bool
+    let axis: String?
+    let asOf: String?
+    let stanceText: String?
+    let valueText: String?
+    let missingNote: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case issue
+        case label
+        case weight
+        case stance
+        case value
+        case alignment
+        case contribution
+        case known
+        case axis
+        case asOf = "as_of"
+        case stanceText = "stance_text"
+        case valueText = "value_text"
+        case missingNote = "missing_note"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        issue = (try? container.decodeIfPresent(String.self, forKey: .issue)) ?? ""
+        label = (try? container.decodeIfPresent(String.self, forKey: .label)) ?? issue
+        weight = (try? container.decodeIfPresent(Int.self, forKey: .weight)) ?? 0
+        stance = try? container.decodeIfPresent(QuizOptionValue.self, forKey: .stance)
+        value = try? container.decodeIfPresent(Double.self, forKey: .value)
+        alignment = try? container.decodeIfPresent(Double.self, forKey: .alignment)
+        contribution = (try? container.decodeIfPresent(Double.self, forKey: .contribution)) ?? 0
+        known = (try? container.decodeIfPresent(Bool.self, forKey: .known)) ?? false
+        axis = try? container.decodeIfPresent(String.self, forKey: .axis)
+        asOf = try? container.decodeIfPresent(String.self, forKey: .asOf)
+        stanceText = try? container.decodeIfPresent(String.self, forKey: .stanceText)
+        valueText = try? container.decodeIfPresent(String.self, forKey: .valueText)
+        missingNote = try? container.decodeIfPresent(String.self, forKey: .missingNote)
+    }
+}
+
+struct QuizEvidence: Codable {
+    let axis: String?
+    let axisLabel: String?
+    let sourceNote: String?
+    let summary: String?
+    let context: String?
+    let citation: String?
+    let answerId: Int?
+    let queryType: String?
+    let asOf: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case axis
+        case axisLabel = "axis_label"
+        case sourceNote = "source_note"
+        case summary
+        case context
+        case citation
+        case answerId = "answer_id"
+        case queryType = "query_type"
+        case asOf = "as_of"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        axis = try? container.decodeIfPresent(String.self, forKey: .axis)
+        axisLabel = try? container.decodeIfPresent(String.self, forKey: .axisLabel)
+        sourceNote = try? container.decodeIfPresent(String.self, forKey: .sourceNote)
+        summary = try? container.decodeIfPresent(String.self, forKey: .summary)
+        context = try? container.decodeIfPresent(String.self, forKey: .context)
+        citation = try? container.decodeIfPresent(String.self, forKey: .citation)
+        answerId = (try? container.decodeIfPresent(Int.self, forKey: .answerId)) ?? Int((try? container.decodeIfPresent(String.self, forKey: .answerId)) ?? "")
+        queryType = try? container.decodeIfPresent(String.self, forKey: .queryType)
+        asOf = try? container.decodeIfPresent(String.self, forKey: .asOf)
+    }
+}
+
+struct QuizAlternative: Codable {
+    let normalizedTopicName: String
+    let topic: String
+    let match: Double?
+    let coverage: Double
+    let band: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case normalizedTopicName = "normalized_topic_name"
+        case topic
+        case match
+        case coverage
+        case band
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        normalizedTopicName = (try? container.decodeIfPresent(String.self, forKey: .normalizedTopicName)) ?? ""
+        topic = (try? container.decodeIfPresent(String.self, forKey: .topic)) ?? normalizedTopicName
+        match = try? container.decodeIfPresent(Double.self, forKey: .match)
+        coverage = (try? container.decodeIfPresent(Double.self, forKey: .coverage)) ?? 0
+        band = try? container.decodeIfPresent(String.self, forKey: .band)
+    }
+}
+
 // MARK: - Organization Analysis
 struct OrganizationAnalysis {
     let topic: String

@@ -20,6 +20,7 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
     private var footerStackView = UIStackView()
     private let bottomPaddingView = UIView()
     private var saveButton: UIButton!
+    private var shareButton: UIButton!
     private var bannerView: BannerView!
     
     private var analysis: OrganizationAnalysis?
@@ -101,6 +102,7 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
         
         setupCard()
         setupSaveButton()
+        setupShareButton()
 //        setupFooter()
         setupBannerAdUI()
         setupFooterOld()
@@ -153,6 +155,13 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
         view.addSubview(saveButton)
     }
     
+    private func setupShareButton() {
+        shareButton = UIButton(type: .system)
+        shareButton.translatesAutoresizingMaskIntoConstraints = false
+        shareButton.addTarget(self, action: #selector(shareButtonTapped), for: .touchUpInside)
+        updateShareButtonAppearance()
+        view.addSubview(shareButton)
+    }
     
     
     private func updateSaveButtonAppearance() {
@@ -171,6 +180,18 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
         
         // Add some padding around the icon
         saveButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+    }
+    
+    private func updateShareButtonAppearance() {
+        shareButton.setImage(UIImage(systemName: "square.and.arrow.up"), for: .normal)
+        shareButton.tintColor = .systemBlue
+        shareButton.backgroundColor = UIColor.white.withAlphaComponent(0.9)
+        shareButton.layer.cornerRadius = 20
+        shareButton.layer.shadowColor = UIColor.black.cgColor
+        shareButton.layer.shadowOffset = CGSize(width: 0, height: 2)
+        shareButton.layer.shadowRadius = 4
+        shareButton.layer.shadowOpacity = 0.1
+        shareButton.accessibilityLabel = "Share answer"
     }
     
     private func setupFooterOld() {
@@ -233,9 +254,14 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
             
             // Save button - positioned in bottom-right corner of the card
             saveButton.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -15),
-            saveButton.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -15),
+            saveButton.trailingAnchor.constraint(equalTo: shareButton.leadingAnchor, constant: -10),
             saveButton.widthAnchor.constraint(equalToConstant: 40),
             saveButton.heightAnchor.constraint(equalToConstant: 40),
+            
+            shareButton.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -15),
+            shareButton.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -15),
+            shareButton.widthAnchor.constraint(equalToConstant: 40),
+            shareButton.heightAnchor.constraint(equalToConstant: 40),
             
             
             // This example doesn't give width or height constraints, as the ad size gives the banner an
@@ -675,6 +701,18 @@ class OverviewViewController: BaseViewController, BannerViewDelegate  {
         if !isSaved {
             updateSaveButtonAppearance()
         }
+    }
+    
+    @objc private func shareButtonTapped() {
+        guard let category = analysis?.category,
+              !organizationName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let url = CompassDeepLink.answerURL(topic: organizationName, category: category) else {
+            return
+        }
+        
+        let activityViewController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        activityViewController.popoverPresentationController?.sourceView = shareButton
+        present(activityViewController, animated: true)
     }
     
     // MARK: - Google AdMob

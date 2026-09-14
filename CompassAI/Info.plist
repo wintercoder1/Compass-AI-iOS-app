@@ -4,9 +4,20 @@
 	<dict>
 		<key>CFBundleIdentifier</key>
 		<string></string>
-		<key>CFBundleDisplayName</key>
-		<string>CorporateCompass</string>
-		<key>UIApplicationSceneManifest</key>
+			<key>CFBundleDisplayName</key>
+			<string>CorporateCompass</string>
+			<key>CFBundleURLTypes</key>
+			<array>
+				<dict>
+					<key>CFBundleURLName</key>
+					<string>com.covariantapps.corporatecompass</string>
+					<key>CFBundleURLSchemes</key>
+					<array>
+						<string>corporatecompass</string>
+					</array>
+				</dict>
+			</array>
+			<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>

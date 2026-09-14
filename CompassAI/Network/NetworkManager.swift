@@ -82,6 +82,11 @@ class NetworkManager {
             return nil
         }
 
+        if let detail = object["detail"] as? [String: Any],
+           let errors = detail["errors"] as? [String] {
+            return errors.joined(separator: "\n")
+        }
+
         for key in ["message", "detail", "error"] {
             if let message = object[key] as? String,
                !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -90,6 +95,92 @@ class NetworkManager {
         }
 
         return nil
+    }
+    
+    private func postRequest<Body: Encodable, Response: Decodable>(
+        endpoint: String,
+        body: Body,
+        responseType: Response.Type,
+        completion: @escaping (Result<Response, NetworkError>) -> Void
+    ) {
+        guard let url = URL(string: baseURL + endpoint) else {
+            completion(.failure(.invalidURL))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONEncoder().encode(body)
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Network error: \(error.localizedDescription)")
+                completion(.failure(.httpError(0)))
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                completion(.failure(.httpError(0)))
+                return
+            }
+            
+            guard 200...299 ~= httpResponse.statusCode else {
+                let message = data.flatMap(Self.errorMessage(from:))
+                if let message {
+                    completion(.failure(.apiError(message, httpResponse.statusCode)))
+                } else {
+                    completion(.failure(.httpError(httpResponse.statusCode)))
+                }
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(.noData))
+                return
+            }
+            
+            do {
+                let decodedResponse = try JSONDecoder().decode(Response.self, from: data)
+                completion(.success(decodedResponse))
+            } catch {
+                print("Decoding error: \(error)")
+                completion(.failure(.decodingError))
+            }
+        }.resume()
+    }
+    
+    // MARK: - Compass Match Quiz
+    func getQuizDefinition(completion: @escaping (Result<QuizDefinitionResponse, NetworkError>) -> Void) {
+        makeRequest(
+            endpoint: "/getQuizDefinition",
+            responseType: QuizDefinitionResponse.self,
+            completion: completion
+        )
+    }
+    
+    func submitQuiz(
+        _ submission: QuizSubmissionRequest,
+        completion: @escaping (Result<QuizResultResponse, NetworkError>) -> Void
+    ) {
+        postRequest(
+            endpoint: "/submitQuiz",
+            body: submission,
+            responseType: QuizResultResponse.self,
+            completion: completion
+        )
+    }
+    
+    func getQuizResult(
+        token: String,
+        completion: @escaping (Result<QuizResultResponse, NetworkError>) -> Void
+    ) {
+        let encodedToken = token.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        makeRequest(
+            endpoint: "/getQuizResult?a=\(encodedToken)",
+            responseType: QuizResultResponse.self,
+            completion: completion
+        )
     }
     
     // MARK: - Political Leaning
